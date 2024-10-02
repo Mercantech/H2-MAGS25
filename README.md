@@ -15,7 +15,6 @@ Domain Models / Class Libary versionen er nu opdateret til .NET 8.0 som er LTS
 
 ## [Dokumentation](https://github.com/MAGS-Template/H2-Projekt/tree/main/Dokumentation)
 Mappen her er stortset tom, fordi I selv skal udfylde den med jeres dokumentation fra jeres projekt! Der skal være jeres UML diagram, enten bare det nyeste eller alle versioner. 
-Jeres Database diagram som i har lavet med [DrawSQL.app](drawsql.app) eller andet program.
 
 ## [API](https://github.com/MAGS-Template/H2-Projekt/tree/main/API)
 Her er jeres API, den bruger vi til at forbinde sikkert til vores database og for at fodre data til vores Blazor Projekt.
