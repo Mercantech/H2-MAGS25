@@ -1,4 +1,4 @@
-namespace API
+namespace DomainModels
 {
     public class WeatherForecast
     {
