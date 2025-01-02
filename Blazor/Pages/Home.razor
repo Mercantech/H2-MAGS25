@@ -1,0 +1,31 @@
+﻿@page "/"
+@inject APIService ApiService
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+@if (forecasts != null)
+{
+    <ul>
+        @foreach (var forecast in forecasts)
+        {
+            <li>@forecast.Date.ToShortDateString() - @forecast.TemperatureC °C - @forecast.Summary</li>
+        }
+    </ul>
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+    private WeatherForecast[]? forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        forecasts = await ApiService.GetWeatherAsync(0, CancellationToken.None);
+    }
+}
