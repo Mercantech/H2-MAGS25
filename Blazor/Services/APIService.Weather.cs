@@ -14,7 +14,7 @@ public partial class APIService
 
         await foreach (
             var forecast in httpClient.GetFromJsonAsAsyncEnumerable<WeatherForecast>(
-                "/weatherforecast",
+                "/api/weatherforecast",
                 cancellationToken
             )
         )
