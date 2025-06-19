@@ -7,121 +7,30 @@
 
 <div class="row">
     <div class="col-md-6 mb-4">
-        <div class="card shadow-sm border-success">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-heart-pulse text-success"></i> API Status
-                </h5>
-                <p class="card-text">
-                    @if (healthCheck is null)
-                    {
-                        <span>Loader...</span>
-                    }
-                    else
-                    {
-                        <span class="fw-bold">@healthCheck.status</span>
-                        <span>-</span>
-                        <span>@healthCheck.message</span>
-                    }
-                </p>
-            </div>
-        </div>
+        <StatusCard 
+            Title="API Status"
+            IconClass="bi bi-heart-pulse text-success"
+            BorderClass="border-success"
+            HealthCheck="@healthCheck" />
     </div>
     <div class="col-md-6 mb-4">
-        <div class="card shadow-sm border-warning">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-database text-warning"></i> Database Status
-                </h5>
-                <p class="card-text">
-                    @if (dbHealthCheck is null)
-                    {
-                        <span>Loader...</span>
-                    }
-                    else
-                    {
-                        <span class="fw-bold">@dbHealthCheck.status</span>
-                        <span>-</span>
-                        <span>@dbHealthCheck.message</span>
-                    }
-                </p>
-            </div>
-        </div>
+        <StatusCard 
+            Title="Database Status"
+            IconClass="bi bi-database text-warning"
+            BorderClass="border-warning"
+            HealthCheck="@dbHealthCheck" />
     </div>
 </div>
 
 <div class="row">
     <div class="col-12">
-        <div class="card shadow-sm mt-4">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-cloud-sun text-primary"></i> Vejrudsigt
-                </h5>
-                @if (weatherForecasts is null)
-                {
-                    <div>Loader vejrdata...</div>
-                }
-                else if (weatherForecasts.Length == 0)
-                {
-                    <div>Ingen vejrdata tilgængelig.</div>
-                }
-                else
-                {
-                    <div class="table-responsive">
-                        <table class="table table-striped align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Dato</th>
-                                    <th>Temperatur (°C)</th>
-                                    <th>Vejrtype</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var forecast in weatherForecasts)
-                                {
-                                    <tr>
-                                        <td>@forecast.Date.ToString("dd-MM-yyyy")</td>
-                                        <td>
-                                            <span class="badge bg-info text-dark">
-                                                @forecast.TemperatureC
-                                            </span>
-                                        </td>
-                                        <td>@forecast.Summary</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-            </div>
-        </div>
+        <WeatherTable WeatherForecasts="@weatherForecasts" />
     </div>
 </div>
 
-<!-- Counter -->
 <div class="row">
     <div class="col-12">
-        <div class="card shadow-sm mt-4 border-primary">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-plus-square-fill me-2" aria-hidden="true"></i> Counter
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <button class="btn btn-primary btn-lg shadow-sm" @onclick="IncrementCount">
-                        <i class="bi bi-hand-index-thumb me-2"></i>Klik her
-                    </button>
-                    <div class="counter-display ms-3">
-                        <span class="badge bg-primary fs-4 p-3 rounded-circle shadow">@count</span>
-                    </div>
-                </div>
-                <div class="progress mt-3">
-                    <div class="progress-bar bg-success" role="progressbar" style="width: @(count > 100 ? 100 : count)%" 
-                         aria-valuenow="@count" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-            </div>
-        </div>
+        <Counter />
     </div>
 </div>
 
@@ -129,16 +38,11 @@
     HealthCheckResponse? healthCheck;
     HealthCheckResponse? dbHealthCheck;
     WeatherForecast[]? weatherForecasts;
-    int count = 0;
+
     protected override async Task OnInitializedAsync()
     {
         healthCheck = await ApiService.GetHealthCheckAsync();
         dbHealthCheck = await ApiService.GetDBHealthCheckAsync();
         weatherForecasts = await ApiService.GetWeatherAsync(5);
-    }
-
-    private void IncrementCount()
-    {
-        count++;
     }
 }
