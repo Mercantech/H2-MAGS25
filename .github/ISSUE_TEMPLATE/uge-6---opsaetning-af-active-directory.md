@@ -2,8 +2,9 @@
 name: Uge 6 - Opsætning af Active Directory
 about: Opsætning af Windows Server 2022 og Active Directory
 title: Uge 6 - Opsætning af Active Directory
-labels: ""
-assignees: ""
+labels: ''
+assignees: ''
+
 ---
 
 ## Opsætning af Active Directory

@@ -2,8 +2,9 @@
 name: Uge 4 - Opstart af Blazor projekt
 about: Uge 4 - Opstart af Blazor projekt med fokus på API kald
 title: Uge 4 - Opstart af Blazor projekt
-labels: ""
-assignees: ""
+labels: ''
+assignees: ''
+
 ---
 
 ## Opstart af Blazor projekt med fokus på API kald

@@ -2,8 +2,9 @@
 name: Uge 3 - Indsæt data & Repository Pattern
 about: Uge 3 - Indsæt data & Repository Pattern
 title: Uge 3 - Indsæt data & Repository Pattern
-labels: ""
-assignees: ""
+labels: ''
+assignees: ''
+
 ---
 
 ## Indsæt data samt repository pattern og struktur

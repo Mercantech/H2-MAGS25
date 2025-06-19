@@ -2,8 +2,9 @@
 name: Uge 6 - Administrator Dashboard
 about: Design og implementér et admin dashboard med AD-integration
 title: Uge 6 - Administrator Dashboard
-labels: ""
-assignees: ""
+labels: ''
+assignees: ''
+
 ---
 
 ## Administrator Dashboard

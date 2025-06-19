@@ -2,8 +2,9 @@
 name: Uge 6 - Roller, brugere og tilladelser
 about: Opret og administrér roller, brugere og tilladelser i AD
 title: Uge 6 - Roller, brugere og tilladelser
-labels: ""
-assignees: ""
+labels: ''
+assignees: ''
+
 ---
 
 ## Roller, brugere og tilladelser på et AD
