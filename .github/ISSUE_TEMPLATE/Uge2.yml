@@ -4,10 +4,10 @@ title: "[Uge 2] "
 labels: ["uge-2", "backend"]
 assignees: []
 body:
+  - type: markdown
+    attributes:
+    value: | ## 📦 Database & EFCore
 
-- type: markdown
-  attributes:
-  value: | ## 📦 Database & EFCore
 
       - [ ] Opret `User`, `Room` og `Booking` modeller i C#
       - [ ] Konfigurer relationer i `DbContext`
