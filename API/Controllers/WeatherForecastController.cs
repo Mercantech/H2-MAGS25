@@ -19,6 +19,11 @@ public class WeatherForecastController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Henter en liste af vejrudsigter for de næste 5 dage.
+    /// </summary>
+    /// <returns>En liste af vejrudsigter.</returns>
+    /// <response code="200">Vejrudsigter blev hentet succesfuldt.</response>
     [HttpGet(Name = "GetWeatherForecast")]
     public IEnumerable<WeatherForecast> Get()
     {
