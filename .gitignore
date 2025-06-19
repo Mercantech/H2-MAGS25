@@ -3,6 +3,5 @@ obj/
 .vs
 .env
 .vscode
-.github
 appsettings.json
 appsettings.Development.json
