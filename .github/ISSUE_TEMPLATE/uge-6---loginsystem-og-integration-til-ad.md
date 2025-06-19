@@ -2,8 +2,9 @@
 name: Uge 6 - Loginsystem og integration til AD
 about: Loginsystem og integration op mod et lokalt Active Directory
 title: Uge 6  - Loginsystem og integration til AD
-labels: ""
-assignees: ""
+labels: ''
+assignees: ''
+
 ---
 
 ## Loginsystem og integration op mod et lokalt AD

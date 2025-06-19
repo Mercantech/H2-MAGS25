@@ -1,9 +1,11 @@
 ---
 name: New custom Issue
-about: Brug denne template når du som elev skal oprette en ny opgave, fejl eller feature.
+about: "\U0001F5C3 Brug denne template når du som elev skal oprette en ny opgave,
+  fejl eller feature."
 title: "[ELEV] Beskriv kort din opgave eller problemstilling"
-labels: ""
-assignees: ""
+labels: ''
+assignees: ''
+
 ---
 
 ## ✏️ Beskrivelse

@@ -2,8 +2,9 @@
 name: Uge 8 - Design af Ticket System
 about: Design af Ticket System med EFCore
 title: Uge 8 -  Design af Ticket System
-labels: ""
-assignees: ""
+labels: ''
+assignees: ''
+
 ---
 
 ## Design af Ticket System med EFCore

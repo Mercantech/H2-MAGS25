@@ -2,8 +2,9 @@
 name: Uge 3 - Fejlhåndtering & Sikkerhed
 about: Uge 3 - Fejlhåndtering & Sikkerhed
 title: Uge 3 - Fejlhåndtering & Sikkerhed
-labels: ""
-assignees: ""
+labels: ''
+assignees: ''
+
 ---
 
 ## 🟢 Tirsdag | Fejlhåndtering og sikkerhed

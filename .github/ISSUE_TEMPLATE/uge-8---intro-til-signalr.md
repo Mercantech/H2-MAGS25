@@ -2,8 +2,9 @@
 name: Uge 8 -  Intro til SignalR
 about: Intro til SignalR og integration med Ticket System
 title: Uge 8 - Intro til SignalR
-labels: ""
-assignees: ""
+labels: ''
+assignees: ''
+
 ---
 
 ## Intro til SignalR
