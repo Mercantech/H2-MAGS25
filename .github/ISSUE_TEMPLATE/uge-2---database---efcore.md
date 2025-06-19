@@ -2,9 +2,8 @@
 name: Uge 2 - Database & EFCore
 about: Uge 2 - Database & EFCore
 title: Uge 2 - Database & EFCore
-labels: ''
-assignees: ''
-
+labels: ""
+assignees: ""
 ---
 
 ## 📦 Database & EFCore
