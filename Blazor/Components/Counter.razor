@@ -1,3 +1,5 @@
+@inject IJSRuntime JSRuntime
+
 <div class="card shadow-sm mt-4 border-primary">
     <div class="card-header bg-primary text-white">
         <h5 class="card-title mb-0">
@@ -23,8 +25,12 @@
 @code {
     private int count = 0;
 
-    private void IncrementCount()
+    private async Task IncrementCount()
     {
         count++;
+        if (count == 100)
+        {
+            await JSRuntime.InvokeVoidAsync("triggerConfetti");
+        }
     }
 } 
