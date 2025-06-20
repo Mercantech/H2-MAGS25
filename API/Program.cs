@@ -1,3 +1,5 @@
+using System.Reflection;
+using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 
 namespace API;
@@ -13,11 +15,11 @@ public class Program
         builder.Services.AddControllers();
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        builder.Services.AddOpenApi(options =>
+        builder.Services.AddSwaggerGen(c =>
         {
-            var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
-            options.IncludeXmlComments(xmlPath);
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            c.IncludeXmlComments(xmlPath);
         });
 
         // Add CORS
@@ -50,9 +52,10 @@ public class Program
         });
 
         // Map the Swagger UI
+        app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
-            options.SwaggerEndpoint("/openapi/v1.json", "API v1");
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
         });
 
         app.UseHttpsRedirection();

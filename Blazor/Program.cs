@@ -27,8 +27,7 @@ public class Program
 
         builder.Services.AddHttpClient<APIService>(client =>
         {
-            client.BaseAddress = new Uri("https://localhost:7013"
-            );
+            client.BaseAddress = new Uri("http://localhost:5253/");
         });
 
         await builder.Build().RunAsync();

@@ -22,6 +22,7 @@ namespace API.Controllers
         /// </summary>
         /// <returns>Status og besked om databaseforbindelse.</returns>
         /// <response code="200">Database er kørende eller fejlbesked gives.</response>
+    
         [HttpGet("dbhealthcheck")]
         public IActionResult DBHealthCheck()
         {
