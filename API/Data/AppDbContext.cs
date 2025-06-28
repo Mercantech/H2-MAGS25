@@ -10,18 +10,32 @@ namespace API.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Room> Rooms { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+        public DbSet<BookingUser> BookingUsers { get; set; }
+        public DbSet<BookingRoom> BookingRooms { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Booking>()
-                .HasOne(b => b.User)
-                .WithMany(u => u.Bookings)
-                .HasForeignKey(b => b.UserId);
+            // BookingUser many-to-many configuration
+            modelBuilder.Entity<BookingUser>()
+                .HasOne(bu => bu.Booking)
+                .WithMany(b => b.BookingUsers)
+                .HasForeignKey(bu => bu.BookingId);
 
-            modelBuilder.Entity<Booking>()
-                .HasOne(b => b.Room)
-                .WithMany(r => r.Bookings)
-                .HasForeignKey(b => b.RoomId);
+            modelBuilder.Entity<BookingUser>()
+                .HasOne(bu => bu.User)
+                .WithMany(u => u.BookingUsers)
+                .HasForeignKey(bu => bu.UserId);
+
+            // BookingRoom many-to-many configuration
+            modelBuilder.Entity<BookingRoom>()
+                .HasOne(br => br.Booking)
+                .WithMany(b => b.BookingRooms)
+                .HasForeignKey(br => br.BookingId);
+
+            modelBuilder.Entity<BookingRoom>()
+                .HasOne(br => br.Room)
+                .WithMany(r => r.BookingRooms)
+                .HasForeignKey(br => br.RoomId);
         }
 
         // Automatically set the Id, CreatedAt and UpdatedAt fields

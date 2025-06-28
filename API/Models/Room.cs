@@ -23,5 +23,5 @@ public partial class Room
 
     public DateTime UpdatedAt { get; set; }
 
-    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    public virtual ICollection<BookingRoom> BookingRooms { get; set; } = new List<BookingRoom>();
 }

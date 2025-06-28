@@ -9,10 +9,6 @@ public partial class Booking
 {
     public string Id { get; set; } = null!;
 
-    public string UserId { get; set; } = null!;
-
-    public string RoomId { get; set; } = null!;
-
     public DateTime CheckInDate { get; set; }
 
     public DateTime CheckOutDate { get; set; }
@@ -23,7 +19,7 @@ public partial class Booking
 
     public DateTime UpdatedAt { get; set; }
 
-    public virtual Room Room { get; set; } = null!;
+    public virtual ICollection<BookingRoom> BookingRooms { get; set; } = new List<BookingRoom>();
 
-    public virtual User User { get; set; } = null!;
+    public virtual ICollection<BookingUser> BookingUsers { get; set; } = new List<BookingUser>();
 }

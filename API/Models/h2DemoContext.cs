@@ -15,21 +15,36 @@ public partial class h2DemoContext : DbContext
 
     public virtual DbSet<Booking> Bookings { get; set; }
 
+    public virtual DbSet<BookingRoom> BookingRooms { get; set; }
+
+    public virtual DbSet<BookingUser> BookingUsers { get; set; }
+
     public virtual DbSet<Room> Rooms { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Booking>(entity =>
+        modelBuilder.Entity<BookingRoom>(entity =>
         {
-            entity.HasIndex(e => e.RoomId, "IX_Bookings_RoomId");
+            entity.HasIndex(e => e.BookingId, "IX_BookingRooms_BookingId");
 
-            entity.HasIndex(e => e.UserId, "IX_Bookings_UserId");
+            entity.HasIndex(e => e.RoomId, "IX_BookingRooms_RoomId");
 
-            entity.HasOne(d => d.Room).WithMany(p => p.Bookings).HasForeignKey(d => d.RoomId);
+            entity.HasOne(d => d.Booking).WithMany(p => p.BookingRooms).HasForeignKey(d => d.BookingId);
 
-            entity.HasOne(d => d.User).WithMany(p => p.Bookings).HasForeignKey(d => d.UserId);
+            entity.HasOne(d => d.Room).WithMany(p => p.BookingRooms).HasForeignKey(d => d.RoomId);
+        });
+
+        modelBuilder.Entity<BookingUser>(entity =>
+        {
+            entity.HasIndex(e => e.BookingId, "IX_BookingUsers_BookingId");
+
+            entity.HasIndex(e => e.UserId, "IX_BookingUsers_UserId");
+
+            entity.HasOne(d => d.Booking).WithMany(p => p.BookingUsers).HasForeignKey(d => d.BookingId);
+
+            entity.HasOne(d => d.User).WithMany(p => p.BookingUsers).HasForeignKey(d => d.UserId);
         });
 
         OnModelCreatingPartial(modelBuilder);

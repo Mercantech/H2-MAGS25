@@ -7,6 +7,6 @@ public class Room : Common
     public decimal Price { get; set; }
     public int Capacity { get; set; }
 
-    // Booking mapping with foreign key
-    public ICollection<Booking> Bookings { get; set; }
+    // Many-to-Many Relations
+    public ICollection<BookingRoom> BookingRooms { get; set; } = new List<BookingRoom>();
 }

@@ -42,6 +42,12 @@
     },
     {
       "name": "public.Users"
+    },
+    {
+      "name": "public.BookingRooms"
+    },
+    {
+      "name": "public.BookingUsers"
     }
   ]
 }
