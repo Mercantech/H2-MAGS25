@@ -49,9 +49,22 @@ namespace API.Data
         }
 
         // Override the SaveChangesAsync method to set the Id, CreatedAt and UpdatedAt fields
-        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
-            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+            foreach (var entry in ChangeTracker.Entries())
+            {
+                if (entry.Entity is Common entity)
+                {
+                    if (string.IsNullOrEmpty(entity.Id))
+                        entity.Id = Guid.NewGuid().ToString();
+
+                    if (entry.State == EntityState.Added)
+                        entity.CreatedAt = DateTime.UtcNow;
+
+                    entity.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
     }
 }
