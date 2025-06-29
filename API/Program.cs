@@ -19,6 +19,10 @@ public class Program
         // Add services to the container.
         builder.Services.AddControllers();
 
+        // JWT Settings
+        builder.Services.Configure<API.Service.JWTSettings>(builder.Configuration.GetSection("JWT"));
+        builder.Services.AddScoped<API.Service.JWTService>();
+
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddSwaggerGen(c =>
         {
