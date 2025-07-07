@@ -1,0 +1,52 @@
+@inject IJSRuntime JS
+
+<div class="mb-3">
+    <span class="@(isOnline ? "text-success" : "text-danger")">
+        <i class="bi @(isOnline ? "bi-wifi" : "bi-wifi-off")"></i>
+        @(isOnline ? "Online" : "Offline")
+    </span>
+</div>
+
+<div class="mb-3">
+    <span>
+        <i class="bi @(isInstalled ? "bi-check-circle-fill text-success" : "bi-x-circle-fill text-danger")"></i>
+        @(isInstalled ? "Appen er installeret som PWA" : "Appen er ikke installeret som PWA")
+    </span>
+</div>
+
+@if (showInstallButton)
+{
+    <button class="btn btn-primary mb-3" @onclick="ShowInstallPrompt">Tilføj til hjemmeskærm</button>
+}
+
+@code {
+    private bool isOnline = true;
+    private bool isInstalled = false;
+    private bool showInstallButton = false;
+    private IJSObjectReference? pwaHelper;
+
+    protected override async Task OnInitializedAsync()
+    {
+        pwaHelper = await JS.InvokeAsync<IJSObjectReference>("import", "./js/pwaHelper.js");
+        isOnline = await pwaHelper.InvokeAsync<bool>("getIsOnline");
+        await JS.InvokeVoidAsync("window.addEventListener", "online", DotNetObjectReference.Create(this), "UpdateOnlineStatus");
+        await JS.InvokeVoidAsync("window.addEventListener", "offline", DotNetObjectReference.Create(this), "UpdateOnlineStatus");
+        isInstalled = await pwaHelper.InvokeAsync<bool>("isPWAInstalled");
+        showInstallButton = await pwaHelper.InvokeAsync<bool>("canPromptInstall");
+    }
+
+    [JSInvokable]
+    public void UpdateOnlineStatus()
+    {
+        isOnline = (bool)JS.InvokeAsync<bool>("navigator.onLine").Result;
+        StateHasChanged();
+    }
+
+    private async Task ShowInstallPrompt()
+    {
+        if (pwaHelper != null)
+        {
+            await pwaHelper.InvokeVoidAsync("showInstallPrompt");
+        }
+    }
+} 

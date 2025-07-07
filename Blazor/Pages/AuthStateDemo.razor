@@ -1,0 +1,139 @@
+@page "/authdemo"
+@inject Blazor.Services.AuthState AuthState
+@inject IJSRuntime JS
+@using System.Text.Json
+
+<h1>AuthState Demo</h1>
+
+<p>Her kan du se og lege med state management, kryptering og localStorage!</p>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">Brugerstatus</div>
+            <div class="card-body">
+                <b>Login-status:</b> @(AuthState.IsLoggedIn ? "<span class='text-success'>Logget ind</span>" : "<span class='text-danger'>Ikke logget ind</span>")<br />
+                <b>Brugernavn:</b> @AuthState.UserName<br />
+                <b>Roller:</b> @(AuthState.Roles.Count > 0 ? string.Join(", ", AuthState.Roles) : "(ingen)")
+            </div>
+        </div>
+        @if (!AuthState.IsLoggedIn)
+        {
+            <div class="card mb-4">
+                <div class="card-header">Log ind (dummy)</div>
+                <div class="card-body">
+                    <input @bind="loginName" placeholder="Brugernavn" class="form-control mb-2" />
+                    <input @bind="loginRoles" placeholder="Roller (komma-separeret)" class="form-control mb-2" />
+                    <button class="btn btn-success" @onclick="Login">Log ind</button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card mb-4">
+                <div class="card-header">Tilføj rolle</div>
+                <div class="card-body">
+                    <input @bind="newRole" placeholder="Ny rolle" class="form-control mb-2" />
+                    <button class="btn btn-primary mb-2" @onclick="AddRole">Tilføj rolle</button>
+                    <br />
+                    <button class="btn btn-danger mt-2" @onclick="Logout">Log ud</button>
+                </div>
+            </div>
+        }
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">Krypteret værdi i localStorage</div>
+            <div class="card-body">
+                <pre class="bg-light p-2 rounded small"><code>@encryptedValue</code></pre>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">Dekrypteret JSON</div>
+            <div class="card-body">
+                <pre class="bg-light p-2 rounded small"><code>@decryptedJson</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    string loginName = "demo";
+    string loginRoles = "admin,bruger";
+    string newRole = string.Empty;
+    string encryptedValue = string.Empty;
+    string decryptedJson = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthState.OnChange += StateHasChanged;
+        await LoadStorageValues();
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnChange -= StateHasChanged;
+    }
+
+    private async Task LoadStorageValues()
+    {
+        var module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/secureStorage.js");
+        encryptedValue = await module.InvokeAsync<string>("getItem", "authstate") ?? "(ingen)";
+        if (!string.IsNullOrEmpty(encryptedValue) && encryptedValue != "(ingen)")
+        {
+            try
+            {
+                var rawJson = await module.InvokeAsync<string>("getDecryptedItem", "authstate");
+                if (!string.IsNullOrEmpty(rawJson))
+                {
+                    try
+                    {
+                        var jsonDoc = JsonDocument.Parse(rawJson);
+                        decryptedJson = JsonSerializer.Serialize(jsonDoc, new JsonSerializerOptions { WriteIndented = true });
+                    }
+                    catch
+                    {
+                        decryptedJson = rawJson;
+                    }
+                }
+                else
+                {
+                    decryptedJson = "(ingen)";
+                }
+            }
+            catch
+            {
+                decryptedJson = "(Kan ikke dekryptere - måske ændret nøgle?)";
+            }
+        }
+        else
+        {
+            decryptedJson = "(ingen)";
+        }
+        StateHasChanged();
+    }
+
+    private async Task Login()
+    {
+        var roles = loginRoles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        await AuthState.LoginAsync(loginName, roles);
+        await LoadStorageValues();
+    }
+
+    private async Task Logout()
+    {
+        await AuthState.LogoutAsync();
+        await LoadStorageValues();
+    }
+
+    private async Task AddRole()
+    {
+        if (!string.IsNullOrWhiteSpace(newRole))
+        {
+            AuthState.Roles.Add(newRole.Trim());
+            await AuthState.SaveAsync();
+            newRole = string.Empty;
+            await LoadStorageValues();
+        }
+    }
+} 

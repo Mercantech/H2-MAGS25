@@ -18,7 +18,7 @@ namespace Blazor.Services
                 return new HealthCheckResponse
                 {
                     status = "Error",
-                    message = "Kunne ikke hente API-status (" + ex.Message + ")"
+                    message = "Kunne ikke hente API-status (" + ex.Message + ")",
                 };
             }
         }

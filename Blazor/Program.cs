@@ -30,6 +30,9 @@ public class Program
             client.BaseAddress = new Uri("http://localhost:5253/");
         });
 
+        // Tilføj AuthState som singleton, så hele appen deler samme instans
+        builder.Services.AddSingleton<AuthState>();
+
         await builder.Build().RunAsync();
     }
 }

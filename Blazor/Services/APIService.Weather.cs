@@ -10,26 +10,34 @@ public partial class APIService
         CancellationToken cancellationToken = default
     )
     {
-        List<WeatherForecast>? forecasts = null;
-
-        await foreach (
-            var forecast in httpClient.GetFromJsonAsAsyncEnumerable<WeatherForecast>(
-                "/api/weatherforecast",
-                cancellationToken
-            )
-        )
+        try
         {
-            if (forecasts?.Count >= maxItems)
-            {
-                break;
-            }
-            if (forecast is not null)
-            {
-                forecasts ??= [];
-                forecasts.Add(forecast);
-            }
-        }
+            List<WeatherForecast>? forecasts = null;
 
-        return forecasts?.ToArray() ?? [];
+            await foreach (
+                var forecast in httpClient.GetFromJsonAsAsyncEnumerable<WeatherForecast>(
+                    "/api/weatherforecast",
+                    cancellationToken
+                )
+            )
+            {
+                if (forecasts?.Count >= maxItems)
+                {
+                    break;
+                }
+                if (forecast is not null)
+                {
+                    forecasts ??= [];
+                    forecasts.Add(forecast);
+                }
+            }
+
+            return forecasts?.ToArray() ?? [];
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Fejl ved hentning af vejrdata: " + ex.Message);
+            return Array.Empty<WeatherForecast>();
+        }
     }
 }
