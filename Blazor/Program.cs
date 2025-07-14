@@ -4,6 +4,7 @@ using Blazor.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 
 namespace Blazor;
 
@@ -27,12 +28,18 @@ public class Program
 
         builder.Services.AddHttpClient<APIService>(client =>
         {
-            client.BaseAddress = new Uri("http://localhost:5253/");
+            client.BaseAddress = new Uri("https://localhost:7013/");
         });
 
         // Tilføj AuthState som singleton, så hele appen deler samme instans
         builder.Services.AddSingleton<AuthState>();
 
-        await builder.Build().RunAsync();
+        var app = builder.Build();
+        
+        // Indlæs AuthState ved app start
+        var authState = app.Services.GetRequiredService<AuthState>();
+        await authState.LoadAsync(app.Services.GetRequiredService<IJSRuntime>());
+
+        await app.RunAsync();
     }
 }

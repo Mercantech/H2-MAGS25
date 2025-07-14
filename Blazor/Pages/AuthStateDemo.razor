@@ -1,5 +1,6 @@
 @page "/authdemo"
 @inject Blazor.Services.AuthState AuthState
+@inject Blazor.Services.APIService APIService
 @inject IJSRuntime JS
 @using System.Text.Json
 
@@ -13,8 +14,13 @@
             <div class="card-header bg-primary text-white">Brugerstatus</div>
             <div class="card-body">
                 <b>Login-status:</b> @(AuthState.IsLoggedIn ? "<span class='text-success'>Logget ind</span>" : "<span class='text-danger'>Ikke logget ind</span>")<br />
-                <b>Brugernavn:</b> @AuthState.UserName<br />
+                <b>Brugernavn:</b> @(AuthState.JWTToken != null ? AuthState.JWTPayload?.Name : AuthState.UserName)<br />
+                <b>Email:</b> @(AuthState.JWTToken != null ? AuthState.JWTPayload?.Email : "(ingen)")<br />
                 <b>Roller:</b> @(AuthState.Roles.Count > 0 ? string.Join(", ", AuthState.Roles) : "(ingen)")
+                @if (AuthState.JWTToken != null)
+                {
+                    <br /><b>JWT Token:</b> <span class="text-info">✓ Aktiveret</span>
+                }
             </div>
         </div>
         @if (!AuthState.IsLoggedIn)
@@ -57,17 +63,103 @@
     </div>
 </div>
 
+<!-- Ny JWT sektion -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">🔐 JWT Authentication</h5>
+            </div>
+            <div class="card-body">
+                @if (!AuthState.IsLoggedIn || AuthState.JWTToken == null)
+                {
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Registrer ny bruger</div>
+                                <div class="card-body">
+                                    <input @bind="registerName" placeholder="Navn" class="form-control mb-2" />
+                                    <input @bind="registerEmail" placeholder="Email" class="form-control mb-2" />
+                                    <input @bind="registerPassword" type="password" placeholder="Adgangskode" class="form-control mb-2" />
+                                    <button class="btn btn-primary" @onclick="RegisterUser" disabled="@isLoading">@(isLoading ? "Registrerer..." : "Registrer")</button>
+                                    @if (!string.IsNullOrEmpty(registerMessage))
+                                    {
+                                        <div class="alert @(registerSuccess ? "alert-success" : "alert-danger") mt-2">@registerMessage</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Log ind med JWT</div>
+                                <div class="card-body">
+                                    <input @bind="loginEmail" placeholder="Email" class="form-control mb-2" />
+                                    <input @bind="loginPassword" type="password" placeholder="Adgangskode" class="form-control mb-2" />
+                                    <button class="btn btn-success" @onclick="LoginWithJWT" disabled="@isLoading">@(isLoading ? "Logger ind..." : "Log ind")</button>
+                                    @if (!string.IsNullOrEmpty(loginMessage))
+                                    {
+                                        <div class="alert @(loginSuccess ? "alert-success" : "alert-danger") mt-2">@loginMessage</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">JWT Token Status</div>
+                                <div class="card-body">
+                                    <p><strong>Token:</strong> <span class="text-success">✓ Aktiveret</span></p>
+                                    <p><strong>Bruger:</strong> @AuthState.JWTPayload?.Name</p>
+                                    <p><strong>Email:</strong> @AuthState.JWTPayload?.Email</p>
+                                    <p><strong>Expires:</strong> @(AuthState.JWTPayload?.Exp != null ? DateTimeOffset.FromUnixTimeSeconds(AuthState.JWTPayload.Exp).ToString("dd/MM/yyyy HH:mm:ss") : "Ukendt")</p>
+                                    <button class="btn btn-danger" @onclick="Logout">Log ud</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">JWT Payload (Dekodet)</div>
+                                <div class="card-body">
+                                    <pre class="bg-light p-2 rounded small"><code>@jwtPayloadJson</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
 @code {
     string loginName = "demo";
     string loginRoles = "admin,bruger";
     string newRole = string.Empty;
     string encryptedValue = string.Empty;
     string decryptedJson = string.Empty;
+    
+    // JWT variabler
+    string registerName = string.Empty;
+    string registerEmail = string.Empty;
+    string registerPassword = string.Empty;
+    string loginEmail = string.Empty;
+    string loginPassword = string.Empty;
+    string registerMessage = string.Empty;
+    string loginMessage = string.Empty;
+    bool registerSuccess = false;
+    bool loginSuccess = false;
+    bool isLoading = false;
+    string jwtPayloadJson = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         AuthState.OnChange += StateHasChanged;
         await LoadStorageValues();
+        await UpdateJWTPayload();
     }
 
     public void Dispose()
@@ -113,6 +205,18 @@
         StateHasChanged();
     }
 
+    private async Task UpdateJWTPayload()
+    {
+        if (AuthState.JWTPayload != null)
+        {
+            jwtPayloadJson = JsonSerializer.Serialize(AuthState.JWTPayload, new JsonSerializerOptions { WriteIndented = true });
+        }
+        else
+        {
+            jwtPayloadJson = "(ingen JWT payload)";
+        }
+    }
+
     private async Task Login()
     {
         var roles = loginRoles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -124,6 +228,7 @@
     {
         await AuthState.LogoutAsync();
         await LoadStorageValues();
+        await UpdateJWTPayload();
     }
 
     private async Task AddRole()
@@ -134,6 +239,89 @@
             await AuthState.SaveAsync();
             newRole = string.Empty;
             await LoadStorageValues();
+        }
+    }
+
+    private async Task RegisterUser()
+    {
+        isLoading = true;
+        registerMessage = string.Empty;
+        registerSuccess = false;
+        
+        try
+        {
+            var request = new Blazor.Services.RegisterRequest
+            {
+                Name = registerName,
+                Email = registerEmail,
+                Password = registerPassword
+            };
+            
+            var response = await APIService.RegisterAsync(request);
+            if (response != null)
+            {
+                registerSuccess = true;
+                registerMessage = "Bruger registreret succesfuldt! Du kan nu logge ind.";
+                registerName = string.Empty;
+                registerEmail = string.Empty;
+                registerPassword = string.Empty;
+            }
+            else
+            {
+                registerSuccess = false;
+                registerMessage = "Fejl ved registrering. Tjek at alle felter er udfyldt korrekt.";
+            }
+        }
+        catch
+        {
+            registerSuccess = false;
+            registerMessage = "Fejl ved forbindelse til serveren.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoginWithJWT()
+    {
+        isLoading = true;
+        loginMessage = string.Empty;
+        loginSuccess = false;
+        
+        try
+        {
+            var request = new Blazor.Services.LoginRequest
+            {
+                Email = loginEmail,
+                Password = loginPassword
+            };
+            
+            var response = await APIService.LoginAsync(request);
+            if (response != null && !string.IsNullOrEmpty(response.Token))
+            {
+                await AuthState.LoginWithJWTAsync(response.Token);
+                loginSuccess = true;
+                loginMessage = "Login succesfuldt!";
+                loginEmail = string.Empty;
+                loginPassword = string.Empty;
+                await LoadStorageValues();
+                await UpdateJWTPayload();
+            }
+            else
+            {
+                loginSuccess = false;
+                loginMessage = "Forkert email eller adgangskode.";
+            }
+        }
+        catch
+        {
+            loginSuccess = false;
+            loginMessage = "Fejl ved forbindelse til serveren.";
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 } 

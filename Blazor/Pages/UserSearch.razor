@@ -1,0 +1,287 @@
+@page "/usersearch"
+@inject Blazor.Services.APIService APIService
+@inject Blazor.Services.AuthState AuthState
+@using System.Text.Json
+
+<h1>🔍 Brugersøgning</h1>
+<p>Test alle search funktionerne med pagination, søgning, sortering og indkludering af relaterede data!</p>
+
+@if (!AuthState.IsLoggedIn)
+{
+    <div class="alert alert-warning">
+        <strong>⚠️ Du skal være logget ind</strong><br />
+        Du skal være logget ind for at bruge søgefunktionen. Gå til <a href="/authdemo">Auth Demo</a> for at logge ind.
+    </div>
+}
+else
+{
+    <div class="alert alert-success mb-3">
+        <strong>✅ Logget ind som: @AuthState.UserName</strong><br />
+        JWT Token: @(string.IsNullOrEmpty(AuthState.JWTToken) ? "❌ Ingen token" : $"✅ Token ({AuthState.JWTToken.Length} tegn)")
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">⚙️ Søgeindstillinger</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Søgeterm:</label>
+                        <input @bind="searchTerm" @bind:event="oninput" placeholder="Søg i navn eller email..." class="form-control" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Side:</label>
+                        <input @bind="currentPage" type="number" min="1" class="form-control" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Antal per side:</label>
+                        <select @bind="pageSize" class="form-control">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Sorter efter:</label>
+                        <select @bind="sortBy" class="form-control">
+                            <option value="name">Navn</option>
+                            <option value="email">Email</option>
+                            <option value="createdat">Oprettelsesdato</option>
+                            <option value="updatedat">Opdateringsdato</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Sortering:</label>
+                        <select @bind="ascending" class="form-control">
+                            <option value="true">Stigende (A-Z)</option>
+                            <option value="false">Faldende (Z-A)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input @bind="includeBookings" type="checkbox" class="form-check-input" id="includeBookings" />
+                            <label class="form-check-label" for="includeBookings">
+                                Inkluder bookings
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Limit (valgfrit):</label>
+                        <input @bind="limit" type="number" min="1" max="1000" class="form-control" placeholder="Maks antal resultater" />
+                    </div>
+                    
+                    <button class="btn btn-primary w-100" @onclick="SearchUsers" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Søger...</span>
+                        }
+                        else
+                        {
+                            <span>🔍 Søg</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">📊 Resultater</h5>
+                </div>
+                <div class="card-body">
+                    @if (searchResult != null)
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>Total antal:</strong> @searchResult.Pagination.TotalCount
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Side:</strong> @searchResult.Pagination.CurrentPage af @searchResult.Pagination.TotalPages
+                            </div>
+                        </div>
+                        
+                        @if (searchResult.Data.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Navn</th>
+                                            <th>Email</th>
+                                            <th>Oprettet</th>
+                                            <th>Opdateret</th>
+                                            @if (includeBookings)
+                                            {
+                                                <th>Bookings</th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var user in searchResult.Data)
+                                        {
+                                            <tr>
+                                                <td><strong>@user.Name</strong></td>
+                                                <td>@user.Email</td>
+                                                <td>@user.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>@user.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                                @if (includeBookings)
+                                                {
+                                                    <td>
+                                                        @if (user.BookingUsers != null && user.BookingUsers.Any())
+                                                        {
+                                                            <span class="badge bg-info">@user.BookingUsers.Count bookings</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">Ingen bookings</span>
+                                                        }
+                                                    </td>
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Pagination -->
+                            @if (searchResult.Pagination.TotalPages > 1)
+                            {
+                                <nav>
+                                    <ul class="pagination justify-content-center">
+                                        <li class="page-item @(searchResult.Pagination.HasPreviousPage ? "" : "disabled")">
+                                            <button class="page-link" @onclick="() => GoToPage(searchResult.Pagination.CurrentPage - 1)" disabled="@(!searchResult.Pagination.HasPreviousPage)">
+                                                ← Forrige
+                                            </button>
+                                        </li>
+                                        
+                                        @for (int i = Math.Max(1, searchResult.Pagination.CurrentPage - 2); i <= Math.Min(searchResult.Pagination.TotalPages, searchResult.Pagination.CurrentPage + 2); i++)
+                                        {
+                                            <li class="page-item @(i == searchResult.Pagination.CurrentPage ? "active" : "")">
+                                                <button class="page-link" @onclick="() => GoToPage(i)">@i</button>
+                                            </li>
+                                        }
+                                        
+                                        <li class="page-item @(searchResult.Pagination.HasNextPage ? "" : "disabled")">
+                                            <button class="page-link" @onclick="() => GoToPage(searchResult.Pagination.CurrentPage + 1)" disabled="@(!searchResult.Pagination.HasNextPage)">
+                                                Næste →
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-info">
+                                <strong>Ingen resultater fundet</strong><br />
+                                Prøv at ændre søgekriterierne eller gå tilbage til en tidligere side.
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted">
+                            <p>Klik på "Søg" for at starte søgningen</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (searchResult != null)
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">🔧 Brugte indstillinger</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Søgeterm:</strong> @(string.IsNullOrEmpty(searchResult.Options.Search) ? "(ingen)" : searchResult.Options.Search)<br />
+                                <strong>Side:</strong> @searchResult.Pagination.CurrentPage<br />
+                                <strong>Antal per side:</strong> @searchResult.Pagination.PageSize<br />
+                                <strong>Limit:</strong> @(searchResult.Options.Limit?.ToString() ?? "(ingen)")
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Sorter efter:</strong> @searchResult.Options.SortBy<br />
+                                <strong>Sortering:</strong> @(searchResult.Options.Ascending ? "Stigende" : "Faldende")<br />
+                                <strong>Bookings inkluderet:</strong> @(searchResult.Options.IncludeBookings ? "Ja" : "Nei")<br />
+                                <strong>Total resultater:</strong> @searchResult.Pagination.TotalCount
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private string searchTerm = "";
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private string sortBy = "name";
+    private bool ascending = true;
+    private bool includeBookings = false;
+    private int? limit = null;
+    private bool isLoading = false;
+    
+    private Blazor.Services.SearchResult? searchResult;
+
+    protected override void OnInitialized()
+    {
+        AuthState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnChange -= StateHasChanged;
+    }
+
+    private async Task SearchUsers()
+    {
+        isLoading = true;
+        
+        try
+        {
+            searchResult = await APIService.GetUsersWithOptionsAsync(
+                page: currentPage,
+                pageSize: pageSize,
+                search: string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm,
+                includeBookings: includeBookings,
+                limit: limit,
+                sortBy: sortBy,
+                ascending: ascending
+            );
+        }
+        catch (Exception ex)
+        {
+            // Håndter fejl her
+            Console.WriteLine($"Fejl ved søgning: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task GoToPage(int page)
+    {
+        currentPage = page;
+        await SearchUsers();
+    }
+} 

@@ -37,7 +37,7 @@ public class JWTService
                 new Claim(ClaimTypes.Name, user.Name ?? ""),
                 new Claim(ClaimTypes.Email, user.Email ?? "")
             }),
-            Expires = DateTime.UtcNow.AddMinutes(_settings.ExpiryMinutes),
+            Expires = DateTime.UtcNow.AddMinutes(_settings.ExpiryMinutes + 120),
             Issuer = _settings.Issuer,
             Audience = _settings.Audience,
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

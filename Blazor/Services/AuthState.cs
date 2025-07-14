@@ -10,7 +10,7 @@ namespace Blazor.Services
     /// <summary>
     /// AuthState holder styr på brugerens login-status og info i hele appen.
     /// Bruges som singleton via Dependency Injection.
-    /// Nu med krypteret localStorage support.
+    /// Nu med krypteret localStorage support og JWT.
     /// </summary>
     public class AuthState
     {
@@ -35,6 +35,16 @@ namespace Blazor.Services
         /// </summary>
         public List<string> Roles { get; private set; } = new();
 
+        /// <summary>
+        /// JWT token for den aktuelle bruger.
+        /// </summary>
+        public string? JWTToken { get; private set; }
+
+        /// <summary>
+        /// JWT payload (dekodet token data).
+        /// </summary>
+        public JWTPayload? JWTPayload { get; private set; }
+
         private const string StorageKey = "authstate";
         private readonly IJSRuntime? _js;
 
@@ -55,6 +65,36 @@ namespace Blazor.Services
         }
 
         /// <summary>
+        /// Log brugeren ind med JWT token.
+        /// </summary>
+        public async Task LoginWithJWTAsync(string token)
+        {
+            if (_js == null) return;
+
+            var module = await _js.InvokeAsync<IJSObjectReference>("import", "./js/secureStorage.js");
+            
+            // Gem JWT token krypteret
+            await module.InvokeVoidAsync("setJWTToken", token);
+            
+            // Dekod JWT payload
+            var payload = await module.InvokeAsync<JWTPayload>("decodeJWT", token);
+            
+            JWTToken = token;
+            JWTPayload = payload;
+            IsLoggedIn = true;
+            UserName = payload?.Name ?? payload?.Email ?? "Ukendt bruger";
+            Roles = new List<string>(); // JWT har ikke roller i vores setup
+            
+            Console.WriteLine($"🔐 JWT Login successful:");
+            Console.WriteLine($"Token length: {token.Length}");
+            Console.WriteLine($"User: {UserName}");
+            Console.WriteLine($"Payload: {payload?.Name} ({payload?.Email})");
+            
+            await SaveAsync();
+            NotifyStateChanged();
+        }
+
+        /// <summary>
         /// Log brugeren ud og nulstil state. Fjerner state fra localStorage.
         /// </summary>
         public async Task LogoutAsync()
@@ -62,7 +102,10 @@ namespace Blazor.Services
             IsLoggedIn = false;
             UserName = null;
             Roles.Clear();
+            JWTToken = null;
+            JWTPayload = null;
             await RemoveAsync();
+            await RemoveJWTAsync();
             NotifyStateChanged();
         }
 
@@ -89,7 +132,8 @@ namespace Blazor.Services
         public async Task LoadAsync(IJSRuntime js)
         {
             var module = await js.InvokeAsync<IJSObjectReference>("import", "./js/secureStorage.js");
-            // Brug JS til at dekryptere og hente
+            
+            // Hent normal state
             var json = await module.InvokeAsync<string>("getDecryptedItem", StorageKey);
             if (!string.IsNullOrEmpty(json))
             {
@@ -105,6 +149,34 @@ namespace Blazor.Services
                 }
                 catch { /* Ignorer fejl, fx hvis nøglen er ændret */ }
             }
+
+            // Hent JWT token
+            var token = await module.InvokeAsync<string>("getJWTToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                try
+                {
+                    var payload = await module.InvokeAsync<JWTPayload>("decodeJWT", token);
+                    if (payload != null)
+                    {
+                        JWTToken = token;
+                        JWTPayload = payload;
+                        IsLoggedIn = true;
+                        UserName = payload.Name ?? payload.Email ?? "Ukendt bruger";
+                        
+                        Console.WriteLine($"🔐 JWT Token loaded from storage:");
+                        Console.WriteLine($"Token length: {token.Length}");
+                        Console.WriteLine($"User: {UserName}");
+                        Console.WriteLine($"Payload: {payload.Name} ({payload.Email})");
+                    }
+                }
+                catch { /* Ignorer fejl */ }
+            }
+            else
+            {
+                Console.WriteLine("⚠️ No JWT token found in storage");
+            }
+            
             NotifyStateChanged();
         }
 
@@ -119,6 +191,16 @@ namespace Blazor.Services
         }
 
         /// <summary>
+        /// Fjern JWT token fra localStorage.
+        /// </summary>
+        public async Task RemoveJWTAsync()
+        {
+            if (_js == null) return;
+            var module = await _js.InvokeAsync<IJSObjectReference>("import", "./js/secureStorage.js");
+            await module.InvokeVoidAsync("removeJWTToken");
+        }
+
+        /// <summary>
         /// Intern metode til at notificere subscribers om ændringer.
         /// </summary>
         private void NotifyStateChanged() => OnChange?.Invoke();
@@ -130,5 +212,32 @@ namespace Blazor.Services
             public string? UserName { get; set; }
             public List<string>? Roles { get; set; }
         }
+    }
+
+    public class JWTPayload
+    {
+        [JsonPropertyName("nameid")]
+        public string? Id { get; set; }
+        
+        [JsonPropertyName("unique_name")]
+        public string? Name { get; set; }
+        
+        [JsonPropertyName("email")]
+        public string? Email { get; set; }
+        
+        [JsonPropertyName("exp")]
+        public long Exp { get; set; }
+        
+        [JsonPropertyName("iat")]
+        public long Iat { get; set; }
+        
+        [JsonPropertyName("nbf")]
+        public long Nbf { get; set; }
+        
+        [JsonPropertyName("iss")]
+        public string? Issuer { get; set; }
+        
+        [JsonPropertyName("aud")]
+        public string? Audience { get; set; }
     }
 } 

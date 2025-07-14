@@ -1,5 +1,6 @@
 using DomainModels;
 using System.Net.Http.Json;
+using System.Net.Http;
 
 namespace Blazor.Services
 {
@@ -9,7 +10,7 @@ namespace Blazor.Services
         {
             try
             {
-                return await httpClient.GetFromJsonAsync<HealthCheckResponse>("api/status/healthcheck");
+                return await _httpClient.GetFromJsonAsync<HealthCheckResponse>("api/status/healthcheck");
             }
             catch (Exception ex)
             {
@@ -26,7 +27,7 @@ namespace Blazor.Services
         {
             try
             {
-                return await httpClient.GetFromJsonAsync<HealthCheckResponse>("api/status/dbhealthcheck");
+                return await _httpClient.GetFromJsonAsync<HealthCheckResponse>("api/status/dbhealthcheck");
             }
             catch (Exception ex)
             {
