@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: API/Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
     container_name: h2-api
     ports:
       - "8051:8080"
@@ -20,6 +22,9 @@ services:
     build:
       context: .
       dockerfile: Blazor/Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+        VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')}
     container_name: h2-blazor
     ports:
       - "8052:80"

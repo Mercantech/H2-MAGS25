@@ -24,6 +24,11 @@ RUN dotnet publish "Blazor.csproj" -c Release -o /app/publish
 
 # Runtime stage
 FROM nginx:alpine AS final
+ARG BUILD_DATE=unknown
+ARG VCS_REF=unknown
+LABEL org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.vcs-ref=$VCS_REF
+
 WORKDIR /usr/share/nginx/html
 COPY --from=publish /app/publish/wwwroot .
 COPY Blazor/nginx.conf /etc/nginx/nginx.conf

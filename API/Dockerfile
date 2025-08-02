@@ -8,6 +8,7 @@ EXPOSE 8080
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
+ARG BUILD_DATE=unknown
 WORKDIR /src
 COPY ["API/API.csproj", "API/"]
 RUN dotnet restore "./API/API.csproj"
@@ -22,6 +23,9 @@ RUN dotnet publish "./API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:Use
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
+ARG BUILD_DATE=unknown
+LABEL org.label-schema.build-date=$BUILD_DATE
+
 WORKDIR /app
 COPY --from=publish /app/publish .
 
