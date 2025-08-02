@@ -45,8 +45,3 @@ services:
 networks:
   h2-network:
     driver: bridge
-
-volumes:
-  # Optional: Add volumes if you need persistent storage
-  # api-data:
-  # blazor-data:
