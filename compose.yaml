@@ -1,9 +1,5 @@
 version: '3.8'
 
-# Fortæller docker-compose at indlæse en .env-fil fra projektroden
-env_file:
-  - .env
-
 services:
   # API Service
   api:
@@ -15,16 +11,13 @@ services:
     container_name: h2-api-mags
     ports:
       - "8053:8080"
+    env_file:
+      - .env
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - DOTNET_USE_POLLING_FILE_WATCHER=1
       - DOTNET_RUNNING_IN_CONTAINER=true
-      - DEFAULT_CONNECTION=${DEFAULT_CONNECTION}
-      - LOCAL_CONNECTION=${LOCAL_CONNECTION}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_ISSUER=${JWT_ISSUER}
-      - JWT_AUDIENCE=${JWT_AUDIENCE}
     networks:
       - h2-network
 
