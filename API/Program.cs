@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
+
 namespace API;
 
 public class Program
@@ -14,9 +15,9 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-
+        IConfiguration Configuration = builder.Configuration;
         // Add DbContext
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
+        var connectionString = Configuration.GetConnectionString("DefaultConnection") ?? Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
         Console.WriteLine($"Connection String: {connectionString}");
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
@@ -25,12 +26,12 @@ public class Program
         builder.Services.AddControllers();
 
         // JWT Settings
-        builder.Services.Configure<API.Service.JWTSettings>(builder.Configuration.GetSection("JWT"));
+        builder.Services.Configure<API.Service.JWTSettings>(Configuration.GetSection("JWT"));
         builder.Services.AddScoped<API.Service.JWTService>();
 
         // JWT Authentication
-        var jwtSettings = builder.Configuration.GetSection("JWT").Get<API.Service.JWTSettings>();
-        var key = Encoding.ASCII.GetBytes(jwtSettings?.Secret) ?? Environment.GetEnvironmentVariable("JWT_SECRET");
+        var jwtSettings = Configuration.GetSection("JWT").Get<API.Service.JWTSettings>();
+        var key = Encoding.ASCII.GetBytes(jwtSettings?.Secret) ?? Encoding.ASCII.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET"));
         Console.WriteLine($"Key: {key}");
 
         builder.Services.AddAuthentication(options =>
