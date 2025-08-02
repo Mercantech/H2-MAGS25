@@ -19,9 +19,16 @@ public class Program
         // Add DbContext
         var connectionStringAppSettings = Configuration.GetConnectionString("DefaultConnection");
         var connectionStringEnv = Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
-        Console.WriteLine($"Connection String: {connectionStringAppSettings} \n Connection String Env: {connectionStringEnv}");
+        Console.WriteLine($"Connection String App Settings: {connectionStringAppSettings}");
+        Console.WriteLine($"Connection String Env: {connectionStringEnv}");
+        // Hvis appsettings-connection string er null ELLER tom, brug env variablen
+        string finalConnectionString = !string.IsNullOrWhiteSpace(connectionStringAppSettings)
+            ? connectionStringAppSettings
+            : connectionStringEnv;
+
+
         builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionStringAppSettings ?? connectionStringEnv));
+            options.UseNpgsql(finalConnectionString));
 
         // Add services to the container.
         builder.Services.AddControllers();
