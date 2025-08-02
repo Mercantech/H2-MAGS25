@@ -24,15 +24,19 @@ public class Program
             }
         });
 
-        // Add CORS for Blazor WASM
+        // Tilføj CORS for specifikke Blazor WASM domæner
         builder.Services.AddCors(options =>
         {
             options.AddPolicy(
-                "AllowAllOrigins",
+                "AllowSpecificOrigins",
                 builder =>
                 {
                     builder
-                        .AllowAnyOrigin()
+                        .WithOrigins(
+                            "http://localhost:5085",
+                            "http://localhost:8052",
+                            "https://h2.mercantec.tech"
+                        )
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .WithExposedHeaders("Content-Disposition");
@@ -40,14 +44,14 @@ public class Program
             );
         });
 
-        // Add basic health checks
+        // Tilføj basic health checks
         builder.Services.AddHealthChecks()
             .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), ["live"]);
 
         var app = builder.Build();
 
-        // Use CORS - must be before other middleware
-        app.UseCors("AllowAllOrigins");
+        // Brug CORS - skal være før anden middleware
+        app.UseCors("AllowSpecificOrigins");
 
         // Map health checks
         app.MapHealthChecks("/health");
