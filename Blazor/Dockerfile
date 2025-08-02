@@ -26,5 +26,5 @@ RUN dotnet publish "Blazor.csproj" -c Release -o /app/publish
 FROM nginx:alpine AS final
 WORKDIR /usr/share/nginx/html
 COPY --from=publish /app/publish/wwwroot .
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY Blazor/nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80 
