@@ -20,6 +20,12 @@ services:
       - DOTNET_RUNNING_IN_CONTAINER=true
     networks:
       - h2-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/status/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Blazor WASM App
   blazor:
@@ -29,15 +35,24 @@ services:
       args:
         BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
         VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')}
+        API_ENDPOINT: http://api:8080/
     container_name: h2-blazor-mags
     ports:
       - "8054:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - API_ENDPOINT=http://api:8080/
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     networks:
       - h2-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:
   h2-network:

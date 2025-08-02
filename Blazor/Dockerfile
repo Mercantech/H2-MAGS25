@@ -23,15 +23,37 @@ RUN dotnet build "Blazor.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "Blazor.csproj" -c Release -o /app/publish
+WORKDIR "/src/Blazor"
+RUN dotnet publish "Blazor.csproj" -c Release -o /app/publish --no-restore
 
-# Runtime stage - use nginx with simple configuration
+# Runtime stage - use nginx with proper MIME type configuration
 FROM nginx:alpine AS final
 WORKDIR /usr/share/nginx/html
+
+# Install curl for health check
+RUN apk add --no-cache curl
+
+# Copy published files
 COPY --from=publish /app/publish/wwwroot .
 
 # Set API endpoint as environment variable for runtime
 ENV API_ENDPOINT=$API_ENDPOINT
 
+# Copy nginx configuration
 COPY Blazor/nginx.conf /etc/nginx/nginx.conf
-EXPOSE 80 
+
+# Create a simple health check script
+RUN echo '#!/bin/sh' > /healthcheck.sh && \
+    echo 'curl -f http://localhost/ || exit 1' >> /healthcheck.sh && \
+    chmod +x /healthcheck.sh
+
+# Verify that key files exist
+RUN ls -la /usr/share/nginx/html/ && \
+    ls -la /usr/share/nginx/html/_framework/ || echo "No _framework directory found"
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD /healthcheck.sh 
