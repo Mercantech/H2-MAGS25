@@ -25,13 +25,13 @@ services:
       args:
         BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
         VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')}
-        API_ENDPOINT: ${API_ENDPOINT:-http://localhost:8051/}
+        API_ENDPOINT: ${API_ENDPOINT:-https://h2api.mercantec.tech/}
     container_name: h2-blazor
     ports:
       - "8052:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - API_ENDPOINT=${API_ENDPOINT:-http://localhost:8051/}
+      - API_ENDPOINT=${API_ENDPOINT:-https://h2api.mercantec.tech/}
     depends_on:
       - api
     networks:
