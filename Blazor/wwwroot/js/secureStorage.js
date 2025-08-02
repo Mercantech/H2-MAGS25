@@ -1,20 +1,38 @@
 const key = "HejH2Hemmelighed"; // 16 tegn
 
-// Sikkerhedstjek for CryptoJS
+// Sikkerhedstjek for CryptoJS med ventetid
 function ensureCryptoJS() {
     if (typeof CryptoJS === 'undefined') {
-        throw new Error('CryptoJS er ikke indlæst. Sørg for at CryptoJS CDN er inkluderet i index.html');
+        // Vent kort og prøv igen
+        return new Promise((resolve, reject) => {
+            let attempts = 0;
+            const maxAttempts = 10;
+            
+            const checkCryptoJS = () => {
+                attempts++;
+                if (typeof CryptoJS !== 'undefined') {
+                    resolve();
+                } else if (attempts >= maxAttempts) {
+                    reject(new Error('CryptoJS er ikke indlæst efter flere forsøg. Sørg for at CryptoJS CDN er inkluderet i index.html'));
+                } else {
+                    setTimeout(checkCryptoJS, 100);
+                }
+            };
+            
+            checkCryptoJS();
+        });
     }
+    return Promise.resolve();
 }
 
-export function setEncryptedItem(storageKey, value) {
-    ensureCryptoJS();
+export async function setEncryptedItem(storageKey, value) {
+    await ensureCryptoJS();
     const encrypted = CryptoJS.AES.encrypt(value, key).toString();
     localStorage.setItem(storageKey, encrypted);
 }
 
-export function getDecryptedItem(storageKey) {
-    ensureCryptoJS();
+export async function getDecryptedItem(storageKey) {
+    await ensureCryptoJS();
     const encrypted = localStorage.getItem(storageKey);
     if (!encrypted) return null;
     const bytes = CryptoJS.AES.decrypt(encrypted, key);
@@ -34,14 +52,14 @@ export function removeItem(key) {
 }
 
 // JWT funktionalitet
-export function setJWTToken(token) {
-    ensureCryptoJS();
+export async function setJWTToken(token) {
+    await ensureCryptoJS();
     const encrypted = CryptoJS.AES.encrypt(token, key).toString();
     localStorage.setItem('jwt_token', encrypted);
 }
 
-export function getJWTToken() {
-    ensureCryptoJS();
+export async function getJWTToken() {
+    await ensureCryptoJS();
     const encrypted = localStorage.getItem('jwt_token');
     if (!encrypted) return null;
     const bytes = CryptoJS.AES.decrypt(encrypted, key);
