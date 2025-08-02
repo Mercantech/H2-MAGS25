@@ -17,7 +17,9 @@ public class Program
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
         // Læs API endpoint fra miljøvariabler eller brug default
-        var apiEndpoint = builder.Configuration["API_ENDPOINT"] ?? "https://h2api.mercantec.tech/";
+        var envApiEndpoint = Environment.GetEnvironmentVariable("API_ENDPOINT");
+        Console.WriteLine($"API Endpoint: {envApiEndpoint}");
+        var apiEndpoint = envApiEndpoint ?? "http://localhost:8051/";
         Console.WriteLine($"API Endpoint: {apiEndpoint}");
 
         // Registrer HttpClient til API service med konfigurerbar endpoint
