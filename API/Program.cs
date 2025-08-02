@@ -9,7 +9,6 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        builder.AddServiceDefaults();
 
         // Add services to the container.
         builder.Services.AddControllers();
@@ -19,7 +18,10 @@ public class Program
         {
             var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
             var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-            c.IncludeXmlComments(xmlPath);
+            if (File.Exists(xmlPath))
+            {
+                c.IncludeXmlComments(xmlPath);
+            }
         });
 
         // Add CORS
@@ -33,12 +35,22 @@ public class Program
                 }
             );
         });
+
+        // Add basic health checks
+        builder.Services.AddHealthChecks()
+            .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), ["live"]);
+
         var app = builder.Build();
 
         // Use CORS
         app.UseCors("AllowAllOrigins");
 
-        app.MapDefaultEndpoints();
+        // Map health checks
+        app.MapHealthChecks("/health");
+        app.MapHealthChecks("/alive", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains("live")
+        });
 
         app.MapOpenApi();
 

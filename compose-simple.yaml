@@ -15,12 +15,6 @@ services:
       - DOTNET_RUNNING_IN_CONTAINER=true
     networks:
       - h2-network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
   # Blazor WASM App
   blazor:
@@ -36,17 +30,10 @@ services:
       - API_ENDPOINT_LOCAL=http://localhost:5253/
       - API_ENDPOINT_PRODUCTION=https://h2-api.mercantec.tech/
     depends_on:
-      api:
-        condition: service_healthy
+      - api
     networks:
       - h2-network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
 networks:
   h2-network:
-    driver: bridge
+    driver: bridge 
