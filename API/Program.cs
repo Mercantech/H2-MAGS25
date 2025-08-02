@@ -38,7 +38,8 @@ public class Program
 
         // JWT Authentication
         var jwtSettings = Configuration.GetSection("JWT").Get<API.Service.JWTSettings>();
-        var key = Encoding.ASCII.GetBytes(jwtSettings?.Secret) ?? Encoding.ASCII.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET"));
+        var secret = jwtSettings?.Secret ?? Environment.GetEnvironmentVariable("JWT_SECRET") ?? "default-secret-key-that-is-long-enough-for-security-and-not-too-short";
+        var key = Encoding.ASCII.GetBytes(secret);
         Console.WriteLine($"Key: {key}");
 
         builder.Services.AddAuthentication(options =>
