@@ -30,6 +30,7 @@ services:
       - "8052:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
     depends_on:
       - api
     networks:

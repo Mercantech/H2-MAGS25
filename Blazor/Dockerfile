@@ -22,14 +22,15 @@ RUN dotnet build "Blazor.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "Blazor.csproj" -c Release -o /app/publish
 
-# Runtime stage
-FROM nginx:alpine AS final
-ARG BUILD_DATE=unknown
-ARG VCS_REF=unknown
-LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.vcs-ref=$VCS_REF
+# Runtime stage - use ASP.NET Core runtime instead of nginx
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
 
-WORKDIR /usr/share/nginx/html
-COPY --from=publish /app/publish/wwwroot .
-COPY Blazor/nginx.conf /etc/nginx/nginx.conf
-EXPOSE 80 
+# Set environment variables
+ENV ASPNETCORE_URLS=http://+:80
+ENV ASPNETCORE_ENVIRONMENT=Development
+
+EXPOSE 80
+
+ENTRYPOINT ["dotnet", "Blazor.dll"] 
