@@ -22,9 +22,9 @@ public class Program
         Console.WriteLine($"Connection String App Settings: {connectionStringAppSettings}");
         Console.WriteLine($"Connection String Env: {connectionStringEnv}");
         // Hvis appsettings-connection string er null ELLER tom, brug env variablen
-        string finalConnectionString = !string.IsNullOrWhiteSpace(connectionStringAppSettings)
-            ? connectionStringAppSettings
-            : connectionStringEnv;
+        string finalConnectionString = !string.IsNullOrWhiteSpace(connectionStringEnv)
+            ? connectionStringEnv
+            : connectionStringAppSettings;
 
 
         builder.Services.AddDbContext<AppDbContext>(options =>
