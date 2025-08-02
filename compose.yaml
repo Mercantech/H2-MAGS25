@@ -39,6 +39,8 @@ services:
     container_name: h2-blazor-mags
     ports:
       - "8054:80"
+    env_file:
+      - .env
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - API_ENDPOINT=http://api:8080/
