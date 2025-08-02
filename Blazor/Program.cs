@@ -29,17 +29,6 @@ public class Program
             Console.WriteLine($"APIService BaseAddress: {client.BaseAddress}");
         });
 
-        // Registrer generel HttpClient
-        builder.Services.AddScoped(sp =>
-        {
-            var client = new HttpClient
-            {
-                BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
-            };
-            Console.WriteLine($"HttpClient BaseAddress: {client.BaseAddress}");
-            return client;
-        });
-
         await builder.Build().RunAsync();
     }
 }
