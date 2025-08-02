@@ -19,16 +19,18 @@ public class JWTSettings
 public class JWTService
 {
     private readonly JWTSettings _settings;
+    private readonly int _expiresValue;
 
     public JWTService(IOptions<JWTSettings> options)
     {
         _settings = options.Value;
+        _expiresValue = _settings.ExpiryMinutes ?? int.Parse(GetEnvironmentVariable("JWT_EXPIRY_MINUTES"));
     }
 
     public string GenerateToken(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_settings.Secret);
+        var key = Encoding.ASCII.GetBytes(_settings.Secret) ?? GetEnvironmentVariable("JWT_SECRET");
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[]
@@ -37,9 +39,9 @@ public class JWTService
                 new Claim(ClaimTypes.Name, user.Name ?? ""),
                 new Claim(ClaimTypes.Email, user.Email ?? "")
             }),
-            Expires = DateTime.UtcNow.AddMinutes(_settings.ExpiryMinutes + 120),
-            Issuer = _settings.Issuer,
-            Audience = _settings.Audience,
+            Expires = DateTime.UtcNow.AddMinutes(_expiresValue + 120),
+            Issuer = _settings.Issuer ?? GetEnvironmentVariable("JWT_ISSUER"),
+            Audience = _settings.Audience ?? GetEnvironmentVariable("JWT_AUDIENCE"),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
         var token = tokenHandler.CreateToken(tokenDescriptor);

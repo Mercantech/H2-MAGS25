@@ -15,6 +15,12 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        // Add DbContext
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
+        Console.WriteLine($"Connection String: {connectionString}");
+        builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(connectionString));
+
         // Add services to the container.
         builder.Services.AddControllers();
 
@@ -24,7 +30,8 @@ public class Program
 
         // JWT Authentication
         var jwtSettings = builder.Configuration.GetSection("JWT").Get<API.Service.JWTSettings>();
-        var key = Encoding.ASCII.GetBytes(jwtSettings?.Secret ?? "your-secret-key-here-make-it-long-enough-for-security");
+        var key = Encoding.ASCII.GetBytes(jwtSettings?.Secret) ?? Environment.GetEnvironmentVariable("JWT_SECRET");
+        Console.WriteLine($"Key: {key}");
 
         builder.Services.AddAuthentication(options =>
         {
