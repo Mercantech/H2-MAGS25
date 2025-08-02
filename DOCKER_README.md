@@ -27,15 +27,31 @@ Denne guide forklarer, hvordan du kører H2 projektet med Docker Compose.
 ## Services
 
 ### API Service
-- **Port:** 8080 (HTTP), 8081 (HTTPS)
-- **URL:** http://localhost:8080
-- **Health Check:** http://localhost:8080/health
-- **Swagger UI:** http://localhost:8080/swagger
+- **Port:** 8050 (HTTP), 8051 (HTTPS)
+- **URL:** http://localhost:8050
+- **Health Check:** http://localhost:8050/health
+- **Swagger UI:** http://localhost:8050/swagger
 
 ### Blazor WASM App
-- **Port:** 80
-- **URL:** http://localhost
-- **Health Check:** http://localhost
+- **Port:** 8052
+- **URL:** http://localhost:8052
+- **Health Check:** http://localhost:8052
+- **Automatisk API Detection:** Appen finder automatisk den rigtige API endpoint
+
+## Automatisk API Endpoint Detection
+
+Blazor appen har nu en intelligent endpoint detection der automatisk finder den rigtige API:
+
+### Fallback Rækkefølge:
+1. **Docker Compose:** `http://api:8080/` (internt i Docker netværk)
+2. **Local Development:** `http://localhost:5253/` (Visual Studio)
+3. **Production:** `https://h2-api.mercantec.tech/` (produktions server)
+
+### Hvordan det virker:
+- Appen tester hver endpoint med en health check
+- Vælger den første der responderer
+- Logger hvilken endpoint der bruges
+- Har en sikker fallback hvis ingen virker
 
 ## Docker Compose Kommandoer
 
@@ -103,12 +119,12 @@ Hvis du vil ændre ports, kan du modificere `compose.yaml`:
 services:
   api:
     ports:
-      - "5000:8080"  # Ændre fra 8080 til 5000
-      - "5001:8081"  # Ændre fra 8081 til 5001
+      - "8050:8080"  # Ændre fra 8050 til 5000
+      - "8051:8081"  # Ændre fra 8051 til 5001
   
   blazor:
     ports:
-      - "3000:80"    # Ændre fra 80 til 3000
+      - "8052:80"    # Ændre fra 8052 til 3000
 ```
 
 ## Fejlfinding
@@ -127,10 +143,10 @@ docker-compose logs blazor
 ### Tjek health checks
 ```bash
 # API health check
-curl http://localhost:8080/health
+curl http://localhost:8050/health
 
 # Blazor health check
-curl http://localhost
+curl http://localhost:8052
 ```
 
 ### Genstart services

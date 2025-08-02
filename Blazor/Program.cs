@@ -4,6 +4,7 @@ using Blazor.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Blazor;
 
@@ -15,6 +16,19 @@ public class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
+        // Registrer ApiEndpointResolver
+        builder.Services.AddScoped<ApiEndpointResolver>();
+
+        // Registrer HttpClient til API service
+        builder.Services.AddHttpClient<APIService>(async (serviceProvider, client) =>
+        {
+            var resolver = serviceProvider.GetRequiredService<ApiEndpointResolver>();
+            var endpoint = await resolver.ResolveApiEndpointAsync();
+            client.BaseAddress = new Uri(endpoint);
+            Console.WriteLine($"APIService BaseAddress: {client.BaseAddress}");
+        });
+
+        // Registrer generel HttpClient
         builder.Services.AddScoped(sp =>
         {
             var client = new HttpClient
@@ -23,11 +37,6 @@ public class Program
             };
             Console.WriteLine($"HttpClient BaseAddress: {client.BaseAddress}");
             return client;
-        });
-
-        builder.Services.AddHttpClient<APIService>(client =>
-        {
-            client.BaseAddress = new Uri("http://localhost:5253/");
         });
 
         await builder.Build().RunAsync();
