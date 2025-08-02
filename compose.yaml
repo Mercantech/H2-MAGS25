@@ -30,9 +30,6 @@ services:
       - "8052:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - API_ENDPOINT_DOCKER=http://api:8080/
-      - API_ENDPOINT_LOCAL=http://localhost:5253/
-      - API_ENDPOINT_PRODUCTION=https://h2-api.mercantec.tech/
     depends_on:
       - api
     networks:

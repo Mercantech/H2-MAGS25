@@ -16,15 +16,10 @@ public class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
-        // Registrer ApiEndpointResolver
-        builder.Services.AddScoped<ApiEndpointResolver>();
-
-        // Registrer HttpClient til API service
-        builder.Services.AddHttpClient<APIService>(async (serviceProvider, client) =>
+        // Registrer HttpClient til API service med fast localhost:8051
+        builder.Services.AddHttpClient<APIService>(client =>
         {
-            var resolver = serviceProvider.GetRequiredService<ApiEndpointResolver>();
-            var endpoint = await resolver.ResolveApiEndpointAsync();
-            client.BaseAddress = new Uri(endpoint);
+            client.BaseAddress = new Uri("http://localhost:8051/");
             Console.WriteLine($"APIService BaseAddress: {client.BaseAddress}");
         });
 
