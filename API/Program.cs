@@ -21,7 +21,6 @@ public class Program
         var connectionStringEnv = Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
         Console.WriteLine($"Connection String App Settings: {connectionStringAppSettings}");
         Console.WriteLine($"Connection String Env: {connectionStringEnv}");
-        // Hvis appsettings-connection string er null ELLER tom, brug env variablen
         string finalConnectionString = !string.IsNullOrWhiteSpace(connectionStringEnv)
             ? connectionStringEnv
             : connectionStringAppSettings;
