@@ -1,11 +1,20 @@
 const key = "HejH2Hemmelighed"; // 16 tegn
 
+// Sikkerhedstjek for CryptoJS
+function ensureCryptoJS() {
+    if (typeof CryptoJS === 'undefined') {
+        throw new Error('CryptoJS er ikke indlæst. Sørg for at CryptoJS CDN er inkluderet i index.html');
+    }
+}
+
 export function setEncryptedItem(storageKey, value) {
+    ensureCryptoJS();
     const encrypted = CryptoJS.AES.encrypt(value, key).toString();
     localStorage.setItem(storageKey, encrypted);
 }
 
 export function getDecryptedItem(storageKey) {
+    ensureCryptoJS();
     const encrypted = localStorage.getItem(storageKey);
     if (!encrypted) return null;
     const bytes = CryptoJS.AES.decrypt(encrypted, key);
@@ -26,11 +35,13 @@ export function removeItem(key) {
 
 // JWT funktionalitet
 export function setJWTToken(token) {
+    ensureCryptoJS();
     const encrypted = CryptoJS.AES.encrypt(token, key).toString();
     localStorage.setItem('jwt_token', encrypted);
 }
 
 export function getJWTToken() {
+    ensureCryptoJS();
     const encrypted = localStorage.getItem('jwt_token');
     if (!encrypted) return null;
     const bytes = CryptoJS.AES.decrypt(encrypted, key);
