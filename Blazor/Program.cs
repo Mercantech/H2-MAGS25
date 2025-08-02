@@ -18,7 +18,7 @@ public class Program
 
         // Læs API endpoint fra miljøvariabler eller brug default
         var envApiEndpoint = Environment.GetEnvironmentVariable("API_ENDPOINT");
-        Console.WriteLine($"API Endpoint: {envApiEndpoint}");
+        Console.WriteLine($"API ENV Endpoint: {envApiEndpoint}");
         var apiEndpoint = envApiEndpoint ?? "http://localhost:8051/";
         Console.WriteLine($"API Endpoint: {apiEndpoint}");
 
