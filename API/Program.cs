@@ -24,14 +24,18 @@ public class Program
             }
         });
 
-        // Add CORS
+        // Add CORS for Blazor WASM
         builder.Services.AddCors(options =>
         {
             options.AddPolicy(
                 "AllowAllOrigins",
                 builder =>
                 {
-                    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                    builder
+                        .AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .WithExposedHeaders("Content-Disposition");
                 }
             );
         });
@@ -42,7 +46,7 @@ public class Program
 
         var app = builder.Build();
 
-        // Use CORS
+        // Use CORS - must be before other middleware
         app.UseCors("AllowAllOrigins");
 
         // Map health checks
