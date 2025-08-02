@@ -17,10 +17,11 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
         IConfiguration Configuration = builder.Configuration;
         // Add DbContext
-        var connectionString = Configuration.GetConnectionString("DefaultConnection") ?? Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
-        Console.WriteLine($"Connection String: {connectionString}");
+        var connectionStringAppSettings = Configuration.GetConnectionString("DefaultConnection");
+        var connectionStringEnv = Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
+        Console.WriteLine($"Connection String: {connectionStringAppSettings} \n Connection String Env: {connectionStringEnv}");
         builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseNpgsql(connectionStringAppSettings ?? connectionStringEnv));
 
         // Add services to the container.
         builder.Services.AddControllers();
