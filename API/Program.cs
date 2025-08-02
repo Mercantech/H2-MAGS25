@@ -14,10 +14,6 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        builder.AddServiceDefaults();
-
-        builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
         // Add services to the container.
         builder.Services.AddControllers();
@@ -85,23 +81,41 @@ public class Program
             });
         });
 
-        // Add CORS
+        // Tilføj CORS for specifikke Blazor WASM domæner
         builder.Services.AddCors(options =>
         {
             options.AddPolicy(
-                "AllowAllOrigins",
+                "AllowSpecificOrigins",
                 builder =>
                 {
-                    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                    builder
+                        .WithOrigins(
+                            "http://localhost:5085",
+                            "http://localhost:8052",
+                            "https://h2.mercantec.tech"
+                        )
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .WithExposedHeaders("Content-Disposition");
                 }
             );
         });
+
+        // Tilføj basic health checks
+        builder.Services.AddHealthChecks()
+            .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), ["live"]);
+
         var app = builder.Build();
 
-        // Use CORS
-        app.UseCors("AllowAllOrigins");
+        // Brug CORS - skal være før anden middleware
+        app.UseCors("AllowSpecificOrigins");
 
-        app.MapDefaultEndpoints();
+        // Map health checks
+        app.MapHealthChecks("/health");
+        app.MapHealthChecks("/alive", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains("live")
+        });
 
         app.MapOpenApi();
 

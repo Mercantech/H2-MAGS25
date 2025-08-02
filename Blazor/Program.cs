@@ -16,19 +16,17 @@ public class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
-        builder.Services.AddScoped(sp =>
-        {
-            var client = new HttpClient
-            {
-                BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
-            };
-            Console.WriteLine($"HttpClient BaseAddress: {client.BaseAddress}");
-            return client;
-        });
+        // Læs API endpoint fra miljøvariabler eller brug default
+        var envApiEndpoint = Environment.GetEnvironmentVariable("API_ENDPOINT");
+        Console.WriteLine($"API ENV Endpoint: {envApiEndpoint}");
+        var apiEndpoint = envApiEndpoint ?? "https://h2api.mercantec.tech/";
+        Console.WriteLine($"API Endpoint: {apiEndpoint}");
 
+        // Registrer HttpClient til API service med konfigurerbar endpoint
         builder.Services.AddHttpClient<APIService>(client =>
         {
-            client.BaseAddress = new Uri("https://localhost:7013/");
+            client.BaseAddress = new Uri(apiEndpoint);
+            Console.WriteLine($"APIService BaseAddress: {client.BaseAddress}");
         });
 
         // Tilføj AuthState som singleton, så hele appen deler samme instans
