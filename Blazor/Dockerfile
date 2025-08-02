@@ -2,6 +2,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
+# Build arguments for API endpoint
+ARG API_ENDPOINT=http://localhost:8051/
+
 # Copy project files
 COPY ["Blazor/Blazor.csproj", "Blazor/"]
 COPY ["DomainModels/DomainModels.csproj", "DomainModels/"]
@@ -22,15 +25,13 @@ RUN dotnet build "Blazor.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "Blazor.csproj" -c Release -o /app/publish
 
-# Runtime stage - use ASP.NET Core runtime instead of nginx
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
+# Runtime stage - use nginx with simple configuration
+FROM nginx:alpine AS final
+WORKDIR /usr/share/nginx/html
+COPY --from=publish /app/publish/wwwroot .
 
-# Set environment variables
-ENV ASPNETCORE_URLS=http://+:80
-ENV ASPNETCORE_ENVIRONMENT=Development
+# Set API endpoint as environment variable for runtime
+ENV API_ENDPOINT=$API_ENDPOINT
 
-EXPOSE 80
-
-ENTRYPOINT ["dotnet", "Blazor.dll"] 
+COPY Blazor/nginx.conf /etc/nginx/nginx.conf
+EXPOSE 80 

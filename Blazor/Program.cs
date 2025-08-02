@@ -16,10 +16,14 @@ public class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
-        // Registrer HttpClient til API service med fast localhost:8051
+        // Læs API endpoint fra miljøvariabler eller brug default
+        var apiEndpoint = builder.Configuration["API_ENDPOINT"] ?? "http://localhost:8051/";
+        Console.WriteLine($"API Endpoint: {apiEndpoint}");
+
+        // Registrer HttpClient til API service med konfigurerbar endpoint
         builder.Services.AddHttpClient<APIService>(client =>
         {
-            client.BaseAddress = new Uri("http://localhost:8051/");
+            client.BaseAddress = new Uri(apiEndpoint);
             Console.WriteLine($"APIService BaseAddress: {client.BaseAddress}");
         });
 
