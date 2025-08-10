@@ -228,6 +228,92 @@ else
             </div>
         </div>
     }
+
+    <!-- Ny sektion: Avancerede LINQ & EF Core Koncepter -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">🧠 Avancerede LINQ & EF Core Koncepter</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">🔍 Dynamisk Søgning med LINQ</h6>
+                            <p class="small">
+                                <strong>IQueryable&lt;T&gt;:</strong> Vores søgning bruger EF Core's IQueryable til at bygge SQL dynamisk.<br />
+                                <strong>Expression Trees:</strong> LINQ udtryk konverteres til SQL på databaseniveau.<br />
+                                <strong>Deferred Execution:</strong> Ingen SQL køres før vi kalder .ToList() eller .Count().
+                            </p>
+                            
+                            <h6 class="text-success">📊 Pagination & Performance</h6>
+                            <p class="small">
+                                <strong>Skip() & Take():</strong> Implementerer OFFSET og LIMIT i SQL.<br />
+                                <strong>Count():</strong> Bruger COUNT(*) for total antal uden at hente alle data.<br />
+                                <strong>Eager Loading:</strong> Include() henter relaterede data i én forespørgsel.
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-info">⚡ EF Core Optimeringer</h6>
+                            <p class="small">
+                                <strong>Query Translation:</strong> LINQ konverteres til optimal SQL.<br />
+                                <strong>Connection Pooling:</strong> Genbruger database forbindelser.<br />
+                                <strong>Change Tracking:</strong> Holder styr på ændringer i memory.
+                            </p>
+                            
+                            <h6 class="text-warning">🔄 Relaterede Data (Include)</h6>
+                            <p class="small">
+                                <strong>BookingUsers:</strong> M2M relation mellem User og Booking.<br />
+                                <strong>Lazy vs Eager:</strong> Include() vs virtual properties.<br />
+                                <strong>Selective Loading:</strong> Kun de nødvendige felter hentes.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-3">
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-danger">💡 Praktisk Eksempel på Backend</h6>
+                            <div class="bg-light p-3 rounded">
+                                <code class="small">
+                                    // Backend LINQ query (simuleret)<br />
+                                    var query = context.Users.AsQueryable();<br />
+                                    <br />
+                                    if (!string.IsNullOrEmpty(search))<br />
+                                    &nbsp;&nbsp;&nbsp;&nbsp;query = query.Where(u => u.Name.Contains(search) || u.Email.Contains(search));<br />
+                                    <br />
+                                    if (includeBookings)<br />
+                                    &nbsp;&nbsp;&nbsp;&nbsp;query = query.Include(u => u.BookingUsers).ThenInclude(bu => bu.Booking);<br />
+                                    <br />
+                                    var totalCount = await query.CountAsync();<br />
+                                    var users = await query<br />
+                                    &nbsp;&nbsp;&nbsp;&nbsp;.OrderBy(u => sortBy == "name" ? u.Name : u.Email)<br />
+                                    &nbsp;&nbsp;&nbsp;&nbsp;.Skip((page - 1) * pageSize)<br />
+                                    &nbsp;&nbsp;&nbsp;&nbsp;.Take(pageSize)<br />
+                                    &nbsp;&nbsp;&nbsp;&nbsp;.ToListAsync();
+                                </code>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6 class="text-secondary">🎯 Nøglefordele ved denne Tilgang</h6>
+                            <ul class="small">
+                                <li><strong>Performance:</strong> Kun nødvendige data hentes fra databasen</li>
+                                <li><strong>Skalerbarhed:</strong> Pagination håndterer store datasæt effektivt</li>
+                                <li><strong>Fleksibilitet:</strong> Dynamisk søgning uden hardcoded queries</li>
+                                <li><strong>Type Safety:</strong> Compile-time validering af LINQ udtryk</li>
+                                <li><strong>Database Agnostic:</strong> Samme kode virker med forskellige databaser</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 @code {
