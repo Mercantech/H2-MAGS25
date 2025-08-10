@@ -32,6 +32,9 @@ public class Program
         // Tilføj AuthState som singleton, så hele appen deler samme instans
         builder.Services.AddSingleton<AuthState>();
 
+        // Tilføj DummyDataService som scoped service
+        builder.Services.AddScoped<DummyDataService>();
+
         var app = builder.Build();
         
         // Indlæs AuthState ved app start
