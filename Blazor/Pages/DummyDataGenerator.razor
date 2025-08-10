@@ -42,7 +42,6 @@ else
                         <div class="col-md-3">
                             <label class="form-label">Locale:</label>
                             <select @bind="locale" class="form-control">
-                                <option value="da">Dansk</option>
                                 <option value="en">English</option>
                                 <option value="de">Deutsch</option>
                                 <option value="fr">Français</option>
@@ -313,7 +312,7 @@ else
 @code {
     private int userCount = 100;
     private int bookingsPerUser = 5;
-    private string locale = "da";
+    private string locale = "en";
     private int? seed = null;
     private string testType = "generation";
     private int iterations = 10;

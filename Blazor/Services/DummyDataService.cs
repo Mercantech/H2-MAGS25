@@ -11,13 +11,13 @@ namespace Blazor.Services
         private readonly Faker _faker;
         private readonly Bogus.Randomizer _random;
 
-        public DummyDataService(string locale = "da")
+        public DummyDataService(string locale = "en")
         {
             _faker = new Faker(locale);
             _random = _faker.Random;
         }
 
-        public DummyDataService(int seed, string locale = "da")
+        public DummyDataService(int seed, string locale = "en")
         {
             _faker = new Faker(locale) { Random = new Bogus.Randomizer(seed) };
             _random = _faker.Random;
