@@ -1,0 +1,484 @@
+@page "/dummydata"
+@inject Blazor.Services.APIService APIService
+@inject Blazor.Services.AuthState AuthState
+@inject Blazor.Services.DummyDataService DummyDataService
+@using Bogus
+@using System.Diagnostics
+
+<h1>🎲 Dummy Data Generator & Performance Testing</h1>
+<p>Brug Bogus til at generere realistiske testdata og test performance under forskellige belastninger!</p>
+
+@if (!AuthState.IsLoggedIn)
+{
+    <div class="alert alert-warning">
+        <strong>⚠️ Du skal være logget ind</strong><br />
+        Du skal være logget ind for at bruge dummy data generatoren. Gå til <a href="/authdemo">Auth Demo</a> for at logge ind.
+    </div>
+}
+else
+{
+    <div class="alert alert-success mb-3">
+        <strong>✅ Logget ind som: @AuthState.UserName</strong><br />
+        JWT Token: @(string.IsNullOrEmpty(AuthState.JWTToken) ? "❌ Ingen token" : $"✅ Token ({AuthState.JWTToken.Length} tegn)")
+    </div>
+
+    <!-- Bogus Konfiguration -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">⚙️ Bogus Konfiguration</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Antal Users:</label>
+                            <input @bind="userCount" type="number" min="1" max="10000" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Antal Bookings per User:</label>
+                            <input @bind="bookingsPerUser" type="number" min="0" max="50" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Locale:</label>
+                            <select @bind="locale" class="form-control">
+                                <option value="da">Dansk</option>
+                                <option value="en">English</option>
+                                <option value="de">Deutsch</option>
+                                <option value="fr">Français</option>
+                                <option value="es">Español</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Seed (valgfrit):</label>
+                            <input @bind="seed" type="number" class="form-control" placeholder="For reproducerbare resultater" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Testing -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">🚀 Performance Testing</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Test Type:</label>
+                            <select @bind="testType" class="form-control">
+                                <option value="generation">Data Generation</option>
+                                <option value="search">Search Performance</option>
+                                <option value="pagination">Pagination Performance</option>
+                                <option value="stress">Stress Test</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Iterations:</label>
+                            <input @bind="iterations" type="number" min="1" max="100" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Delay mellem requests (ms):</label>
+                            <input @bind="delayMs" type="number" min="0" max="5000" class="form-control" />
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button class="btn btn-success me-2" @onclick="GenerateDummyData" disabled="@isGenerating">
+                                @if (isGenerating)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span>Genererer...</span>
+                                }
+                                else
+                                {
+                                    <span>🎲 Generer Dummy Data</span>
+                                }
+                            </button>
+                            
+                            <button class="btn btn-warning me-2" @onclick="RunPerformanceTest" disabled="@isTesting">
+                                @if (isTesting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span>Tester...</span>
+                                }
+                                else
+                                {
+                                    <span>⚡ Kør Performance Test</span>
+                                }
+                            </button>
+                            
+                            <button class="btn btn-info" @onclick="ClearResults">
+                                🗑️ Ryd Resultater
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultater -->
+    @if (generatedData.Any() || performanceResults.Any())
+    {
+        <div class="row">
+            <!-- Genererede Data -->
+            @if (generatedData.Any())
+            {
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">📊 Genererede Data</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive" style="max-height: 400px;">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Navn</th>
+                                            <th>Email</th>
+                                            <th>Bookings</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var user in generatedData.Take(10))
+                                        {
+                                            <tr>
+                                                <td>@user.Name</td>
+                                                <td>@user.Email</td>
+                                                <td>@user.BookingCount</td>
+                                            </tr>
+                                        }
+                                        @if (generatedData.Count > 10)
+                                        {
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted">
+                                                    ... og @(generatedData.Count - 10) flere
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    Total: @generatedData.Count users genereret
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Performance Resultater -->
+            @if (performanceResults.Any())
+            {
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">⚡ Performance Resultater</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive" style="max-height: 400px;">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Test</th>
+                                            <th>Tid (ms)</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var result in performanceResults)
+                                        {
+                                            <tr>
+                                                <td>@result.TestName</td>
+                                                <td>@result.DurationMs</td>
+                                                <td>
+                                                    <span class="badge @(result.Success ? "bg-success" : "bg-danger")">
+                                                        @(result.Success ? "✅" : "❌")
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            @if (performanceResults.Any())
+                            {
+                                var avgTime = performanceResults.Average(r => r.DurationMs);
+                                var minTime = performanceResults.Min(r => r.DurationMs);
+                                var maxTime = performanceResults.Max(r => r.DurationMs);
+                                
+                                <div class="mt-3">
+                                    <h6>📈 Statistikker:</h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <strong>Gennemsnit:</strong> @avgTime.ToString("F2") ms
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Min:</strong> @minTime.ToString("F2") ms
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Max:</strong> @maxTime.ToString("F2") ms
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Bogus Forklaring -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">📚 Om Bogus - Dummy Data Generator</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">🎯 Hvad er Bogus?</h6>
+                            <p class="small">
+                                <strong>Bogus</strong> er en populær .NET bibliotek til at generere realistiske dummy data.<br />
+                                <strong>Faker:</strong> Hovedklassen der genererer data baseret på locale og regler.<br />
+                                <strong>Rules:</strong> Definerer hvordan hver property skal genereres.<br />
+                                <strong>Seed:</strong> Giver reproducerbare resultater for testing.
+                            </p>
+                            
+                            <h6 class="text-success">🔧 Hvordan det virker</h6>
+                            <p class="small">
+                                <strong>Locale-baseret:</strong> Genererer data på forskellige sprog (dansk, engelsk, etc.).<br />
+                                <strong>Realistiske data:</strong> Navne, adresser, telefonnumre der ser rigtige ud.<br />
+                                <strong>Customizable:</strong> Du kan definere dine egne regler for data generering.<br />
+                                <strong>Performance:</strong> Hurtig generering af store mængder data.
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-info">💡 Brugsområder</h6>
+                            <p class="small">
+                                <strong>Development:</strong> Fyld database med testdata under udvikling.<br />
+                                <strong>Testing:</strong> Test applikationer med store datasæt.<br />
+                                <strong>Performance:</strong> Test hvordan systemet håndterer belastning.<br />
+                                <strong>Demo:</strong> Vis applikationer med realistiske data.
+                            </p>
+                            
+                            <h6 class="text-warning">⚡ Performance Testing</h6>
+                            <p class="small">
+                                <strong>Load Testing:</strong> Test systemet under forskellige belastninger.<br />
+                                <strong>Stress Testing:</strong> Find grænser for hvad systemet kan håndtere.<br />
+                                <strong>Benchmarking:</strong> Mål response tider og throughput.<br />
+                                <strong>Scalability:</strong> Test hvordan systemet skalerer med data mængde.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-3">
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-danger">💻 Praktisk Eksempel på Backend</h6>
+                            <div class="bg-light p-3 rounded">
+                                <code class="small">
+                                    // Backend med Bogus (simuleret)<br />
+                                    var userFaker = new Faker&lt;User&gt;("da")<br />
+                                    &nbsp;&nbsp;&nbsp;&nbsp;.RuleFor(u => u.Name, f => f.Name.FullName())<br />
+                                    &nbsp;&nbsp;&nbsp;&nbsp;.RuleFor(u => u.Email, (f, u) => f.Internet.Email(u.Name))<br />
+                                    &nbsp;&nbsp;&nbsp;&nbsp;.RuleFor(u => u.CreatedAt, f => f.Date.Past(2));<br />
+                                    <br />
+                                    var users = userFaker.Generate(1000);<br />
+                                    await context.Users.AddRangeAsync(users);<br />
+                                    await context.SaveChangesAsync();
+                                </code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private int userCount = 100;
+    private int bookingsPerUser = 5;
+    private string locale = "da";
+    private int? seed = null;
+    private string testType = "generation";
+    private int iterations = 10;
+    private int delayMs = 100;
+    
+    private bool isGenerating = false;
+    private bool isTesting = false;
+    
+    private List<GeneratedUser> generatedData = new();
+    private List<PerformanceResult> performanceResults = new();
+
+    public class GeneratedUser
+    {
+        public string Name { get; set; } = "";
+        public string Email { get; set; } = "";
+        public int BookingCount { get; set; }
+    }
+
+    public class PerformanceResult
+    {
+        public string TestName { get; set; } = "";
+        public double DurationMs { get; set; }
+        public bool Success { get; set; }
+        public string? ErrorMessage { get; set; }
+    }
+
+    private async Task GenerateDummyData()
+    {
+        isGenerating = true;
+        generatedData.Clear();
+        
+        try
+        {
+            // Opret DummyDataService med valgt locale og seed
+            var service = seed.HasValue 
+                ? new Blazor.Services.DummyDataService(seed.Value, locale)
+                : new Blazor.Services.DummyDataService(locale);
+
+            // Generer users med bookings
+            var users = service.GenerateUsers(userCount, bookingsPerUser);
+            
+            // Konverter til GeneratedUser format for visning
+            foreach (var user in users)
+            {
+                generatedData.Add(new GeneratedUser
+                {
+                    Name = user.Name,
+                    Email = user.Email,
+                    BookingCount = user.BookingUsers?.Count ?? 0
+                });
+            }
+
+            // Simuler API kald til backend
+            await Task.Delay(1000); // Simulerer database operation
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fejl ved generering: {ex.Message}");
+        }
+        finally
+        {
+            isGenerating = false;
+        }
+    }
+
+    private async Task RunPerformanceTest()
+    {
+        isTesting = true;
+        performanceResults.Clear();
+        
+        try
+        {
+            var stopwatch = new Stopwatch();
+            
+            for (int i = 0; i < iterations; i++)
+            {
+                stopwatch.Restart();
+                
+                try
+                {
+                    switch (testType)
+                    {
+                        case "generation":
+                            await SimulateDataGeneration();
+                            break;
+                        case "search":
+                            await SimulateSearch();
+                            break;
+                        case "pagination":
+                            await SimulatePagination();
+                            break;
+                        case "stress":
+                            await SimulateStressTest();
+                            break;
+                    }
+                    
+                    stopwatch.Stop();
+                    
+                    performanceResults.Add(new PerformanceResult
+                    {
+                        TestName = $"{testType} #{i + 1}",
+                        DurationMs = stopwatch.ElapsedMilliseconds,
+                        Success = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    stopwatch.Stop();
+                    performanceResults.Add(new PerformanceResult
+                    {
+                        TestName = $"{testType} #{i + 1}",
+                        DurationMs = stopwatch.ElapsedMilliseconds,
+                        Success = false,
+                        ErrorMessage = ex.Message
+                    });
+                }
+                
+                if (delayMs > 0 && i < iterations - 1)
+                {
+                    await Task.Delay(delayMs);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fejl ved performance test: {ex.Message}");
+        }
+        finally
+        {
+            isTesting = false;
+        }
+    }
+
+    private async Task SimulateDataGeneration()
+    {
+        // Simulerer data generering
+        var faker = new Faker(locale);
+        var users = faker.Generate(100);
+        await Task.Delay(faker.Random.Int(50, 200)); // Simulerer variabel performance
+    }
+
+    private async Task SimulateSearch()
+    {
+        // Simulerer søgning
+        var faker = new Faker(locale);
+        await Task.Delay(faker.Random.Int(20, 100));
+    }
+
+    private async Task SimulatePagination()
+    {
+        // Simulerer pagination
+        var faker = new Faker(locale);
+        await Task.Delay(faker.Random.Int(15, 80));
+    }
+
+    private async Task SimulateStressTest()
+    {
+        // Simulerer stress test
+        var faker = new Faker(locale);
+        await Task.Delay(faker.Random.Int(100, 500));
+    }
+
+    private void ClearResults()
+    {
+        generatedData.Clear();
+        performanceResults.Clear();
+    }
+}
