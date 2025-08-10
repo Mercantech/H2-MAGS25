@@ -159,7 +159,7 @@
     {
         AuthState.OnChange += StateHasChanged;
         await LoadStorageValues();
-        await UpdateJWTPayload();
+        UpdateJWTPayload();
     }
 
     public void Dispose()
@@ -205,7 +205,7 @@
         StateHasChanged();
     }
 
-    private async Task UpdateJWTPayload()
+    private void UpdateJWTPayload()
     {
         if (AuthState.JWTPayload != null)
         {
@@ -228,7 +228,7 @@
     {
         await AuthState.LogoutAsync();
         await LoadStorageValues();
-        await UpdateJWTPayload();
+        UpdateJWTPayload();
     }
 
     private async Task AddRole()
@@ -306,7 +306,7 @@
                 loginEmail = string.Empty;
                 loginPassword = string.Empty;
                 await LoadStorageValues();
-                await UpdateJWTPayload();
+                UpdateJWTPayload();
             }
             else
             {

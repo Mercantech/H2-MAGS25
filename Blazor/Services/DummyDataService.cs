@@ -3,21 +3,24 @@ using DomainModels;
 
 namespace Blazor.Services
 {
+    /// <summary>
+    /// Service til at generere dummy data for testing og demonstration
+    /// </summary>
     public class DummyDataService
     {
         private readonly Faker _faker;
-        private readonly Random _random;
+        private readonly Bogus.Randomizer _random;
 
         public DummyDataService(string locale = "da")
         {
             _faker = new Faker(locale);
-            _random = new Random();
+            _random = _faker.Random;
         }
 
         public DummyDataService(int seed, string locale = "da")
         {
-            _faker = new Faker(locale) { Random = new Random(seed) };
-            _random = new Random(seed);
+            _faker = new Faker(locale) { Random = new Bogus.Randomizer(seed) };
+            _random = _faker.Random;
         }
 
         /// <summary>
@@ -41,7 +44,7 @@ namespace Blazor.Services
             {
                 foreach (var user in users)
                 {
-                    var bookingCount = _random.Next(0, maxBookingsPerUser.Value + 1);
+                    var bookingCount = _random.Int(0, maxBookingsPerUser.Value + 1);
                     user.BookingUsers = GenerateBookingsForUser(user.Id, bookingCount);
                 }
             }
@@ -59,8 +62,8 @@ namespace Blazor.Services
             for (int i = 0; i < count; i++)
             {
                 var checkInDate = _faker.Date.Between(DateTime.Now.AddDays(-365), DateTime.Now.AddDays(365));
-                var checkOutDate = checkInDate.AddDays(_random.Next(1, 15));
-                var totalPrice = _random.Next(500, 5000);
+                var checkOutDate = checkInDate.AddDays(_random.Int(1, 15));
+                var totalPrice = _random.Int(500, 5000);
 
                 var booking = new Booking
                 {
@@ -68,8 +71,8 @@ namespace Blazor.Services
                     CheckInDate = checkInDate,
                     CheckOutDate = checkOutDate,
                     TotalPrice = totalPrice,
-                    CreatedAt = checkInDate.AddDays(-_random.Next(1, 30)),
-                    UpdatedAt = checkInDate.AddDays(-_random.Next(0, 7))
+                    CreatedAt = checkInDate.AddDays(-_random.Int(1, 30)),
+                    UpdatedAt = checkInDate.AddDays(-_random.Int(0, 7))
                 };
 
                 var bookingUser = new BookingUser
@@ -94,11 +97,11 @@ namespace Blazor.Services
             var roomTypes = new[] { "Single", "Double", "Suite", "Family", "Deluxe" };
             var roomFaker = new Faker<Room>()
                 .RuleFor(r => r.Id, f => Guid.NewGuid().ToString())
-                .RuleFor(r => r.Number, f => f.Random.Int(100, 999).ToString())
-                .RuleFor(r => r.Type, f => f.PickRandom(roomTypes))
+                .RuleFor(r => r.Name, f => $"Room {f.Random.Int(100, 999)}")
+                .RuleFor(r => r.Description, f => f.Lorem.Sentence())
+                .RuleFor(r => r.Image, f => f.Image.PicsumUrl())
+                .RuleFor(r => r.Price, f => f.Random.Decimal(500, 2500))
                 .RuleFor(r => r.Capacity, f => f.Random.Int(1, 6))
-                .RuleFor(r => r.PricePerNight, f => f.Random.Decimal(500, 2500))
-                .RuleFor(r => r.IsAvailable, f => f.Random.Bool(0.7f)) // 70% chance for at være ledig
                 .RuleFor(r => r.CreatedAt, f => f.Date.Past(1))
                 .RuleFor(r => r.UpdatedAt, (f, r) => r.CreatedAt.AddDays(f.Random.Int(0, 365)));
 
