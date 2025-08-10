@@ -39,7 +39,7 @@ namespace Blazor.Services
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("/User/login", request);
+                var response = await _httpClient.PostAsJsonAsync("User/login", request);
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadFromJsonAsync<LoginResponse>();
@@ -56,7 +56,7 @@ namespace Blazor.Services
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("/User/register", request);
+                var response = await _httpClient.PostAsJsonAsync("User/register", request);
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadFromJsonAsync<RegisterResponse>();
