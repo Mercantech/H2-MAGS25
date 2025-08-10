@@ -91,7 +91,7 @@ namespace Blazor.Services
                 if (!ascending) queryParams.Add("ascending=false");
 
                 var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
-                var url = $"/User/search{queryString}";
+                var url = $"User/search{queryString}";
 
                 var request = CreateAuthenticatedRequest(HttpMethod.Get, url);
                 var response = await _httpClient.SendAsync(request);
