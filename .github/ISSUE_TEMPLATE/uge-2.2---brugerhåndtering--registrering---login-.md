@@ -14,4 +14,3 @@ assignees: ''
   - [ ] Hash adgangskode med BCrypt
 - [ ] Implementer login (POST /login)
   - [ ] Valider bruger og adgangskode
-  - [ ] Udsted JWT ved succesfuldt login
