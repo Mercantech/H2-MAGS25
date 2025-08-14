@@ -9,7 +9,7 @@ assignees: ''
 
 ## 📦 Database & EFCore
 
-- [ ] Opret `User`, `Room` og `Booking` modeller i C#
+- [ ] Opret `User` modellen i C#
 - [ ] Konfigurer relationer i `DbContext`
 - [ ] Lav og kør første EF Core migration
 - [ ] Bekræft at databasen oprettes korrekt i PostgreSQL
